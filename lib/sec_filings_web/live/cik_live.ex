@@ -1,4 +1,4 @@
-defmodule SecFilingsWeb.CikLive do
+defmodule SecFilingsWeb.PageLive do
   use SecFilingsWeb, :live_view
   import Ecto.Query, warn: false
 
