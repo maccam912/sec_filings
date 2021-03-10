@@ -19,8 +19,9 @@ years
   qtrs
   |> Flow.from_enumerable()
   |> Flow.flat_map(fn qtr ->
-    IO.puts "#{year} #{qtr}"
+    IO.puts("#{year} #{qtr}")
     url = "https://www.sec.gov/Archives/edgar/full-index/#{year}/#{qtr}/xbrl.idx"
+
     SecFilings.EdgarClient.get_index(url)
     |> Flow.from_enumerable()
     |> Flow.map(fn map -> SecFilings.Raw.create_index(map) end)

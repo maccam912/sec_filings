@@ -7,7 +7,7 @@ use Mix.Config
 # Run `mix help test` for more information.
 config :sec_filings, SecFilings.Repo,
   username: "root",
-  password: "",
+  password: "postgres",
   database: "sec_filings_test#{System.get_env("MIX_TEST_PARTITION")}",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
