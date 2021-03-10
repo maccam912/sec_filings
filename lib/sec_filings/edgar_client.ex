@@ -3,7 +3,7 @@ defmodule SecFilings.EdgarClient do
   NimbleCSV.define(IndexParser, separator: "|", escape: "\"")
 
   def get_index(url) do
-    {:ok, %HTTPoison.Response{body: body}} = HTTPoison.get(url)
+    {:ok, %HTTPoison.Response{body: body}} = HTTPoison.get(url, %{}, hackney: [:insecure])
     rows = IndexParser.parse_string(body)
     rows
     |> Enum.filter(fn row -> length(row) == 5 end)
@@ -21,7 +21,7 @@ defmodule SecFilings.EdgarClient do
   end
 
   def get_financial_statements(filename) do
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get("https://www.sec.gov/Archives/#{filename}")
+    {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get("https://www.sec.gov/Archives/#{filename}", %{}, hackney: [:insecure])
     document = Floki.parse_document!(body)
 
     Floki.find(document, "document")

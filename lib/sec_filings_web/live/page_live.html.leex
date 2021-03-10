@@ -1,3 +1,13 @@
 <section class="phx-hero">
-<%= raw(@contents) %>
+<h1>Companies</h1>
+<table>
+<tr><th>Company Name</th><th>Form Type</th><th>Date Filed</th></tr>
+<%= for table <- @tables do %>
+<tr>
+<td><%= table.company_name %></td>
+<td><%= table.form_type %></td>
+<td><%= table.date_filed %></td>
+</tr>
+<% end %>
+</table>
 </section>
