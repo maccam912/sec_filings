@@ -1,4 +1,8 @@
 <h1>Companies</h1>
+<form phx-change="search" phx-submit="search">
+    <label for="q">Filter Company Name</label>
+    <input type="text" name="q" phx-debounce="150" value="<%= @query %>" placeholder="Filter" autocomplete="off"/>
+</form>
 <table>
 <tr><th>Company Name</th><th>Form Type</th><th>Date Filed</th></tr>
 <%= for table <- @tables do %>

@@ -1,4 +1,4 @@
-defmodule SecFilingsWeb.CikLive do
+defmodule SecFilingsWeb.PageLive do
   use SecFilingsWeb, :live_view
   import Ecto.Query, warn: false
 
@@ -9,9 +9,22 @@ defmodule SecFilingsWeb.CikLive do
         from c in SecFilings.Raw.Index,
           where: c.form_type in ["10-K", "10-Q"],
           order_by: [desc: :date_filed],
+          limit: 100
+      )
+
+    {:ok, assign(socket, tables: companies, query: "")}
+  end
+
+  @impl true
+  def handle_event("search", %{"q" => query}, socket) do
+    companies =
+      SecFilings.Repo.all(
+        from c in SecFilings.Raw.Index,
+          where: c.form_type in ["10-K", "10-Q"] and like(c.company_name, ^"%#{query}%"),
+          order_by: [desc: :date_filed],
           limit: 1000
       )
 
-    {:ok, assign(socket, tables: companies)}
+    {:noreply, assign(socket, tables: companies, query: query)}
   end
 end

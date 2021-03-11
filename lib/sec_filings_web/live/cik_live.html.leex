@@ -1,11 +1,11 @@
-<h1>Companies</h1>
+<h1><%= List.first(@tables).company_name %></h1>
 <table>
-<tr><th>Company Name</th><th>Form Type</th><th>Date Filed</th></tr>
+<tr><th>Form Type</th><th>Date Filed</th><th>Filename</th></tr>
 <%= for table <- @tables do %>
 <tr>
-<td><%= link(table.company_name, to: "/cik/#{to_charlist(table.cik)}") %></td>
 <td><%= table.form_type %></td>
 <td><%= table.date_filed %></td>
+<td><%= link(table.filename, to: "https://www.sec.gov/Archives/#{table.filename}") %></td>
 </tr>
 <% end %>
 </table>
