@@ -10,7 +10,7 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-years = 2010..2021
+years = 2005..2021
 qtrs = ["QTR1", "QTR2", "QTR3", "QTR4"]
 
 years
