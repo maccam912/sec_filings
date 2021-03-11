@@ -3,24 +3,34 @@ defmodule SecFilings.EdgarClient do
   NimbleCSV.define(IndexParser, separator: "|", escape: "\"")
 
   def get_index(url) do
-    {:ok, %HTTPoison.Response{body: body}} = HTTPoison.get(url, %{}, hackney: [:insecure])
-    rows = IndexParser.parse_string(body)
+    {st, %HTTPoison.Response{body: body}} = HTTPoison.get(url, %{}, hackney: [:insecure])
 
-    rows
-    |> Enum.filter(fn row -> length(row) == 5 end)
-    |> Enum.filter(fn [cik, _, _, _, _] -> cik != "CIK" end)
-    |> Enum.map(fn [cik, company_name, form_type, date_filed, filename] ->
-      {cik_int, _} = Integer.parse(cik)
-      {:ok, date_filed_dt} = Datix.Date.parse(date_filed, "%x")
+    if st != :ok do
+      [nil]
+    else
+      parse_task = Task.async(fn -> IndexParser.parse_string(body) end)
+      {st, rows} = Task.yield(parse_task, 60000)
 
-      %{
-        cik: cik_int,
-        company_name: company_name,
-        form_type: form_type,
-        date_filed: date_filed_dt,
-        filename: filename
-      }
-    end)
+      if st != :ok do
+        [nil]
+      else
+        rows
+        |> Enum.filter(fn row -> length(row) == 5 end)
+        |> Enum.filter(fn [cik, _, _, _, _] -> cik != "CIK" end)
+        |> Enum.map(fn [cik, company_name, form_type, date_filed, filename] ->
+          {cik_int, _} = Integer.parse(cik)
+          {:ok, date_filed_dt} = Datix.Date.parse(date_filed, "%x")
+
+          %{
+            cik: cik_int,
+            company_name: company_name,
+            form_type: form_type,
+            date_filed: date_filed_dt,
+            filename: filename
+          }
+        end)
+      end
+    end
   end
 
   def extract_title_content_children(document) do
