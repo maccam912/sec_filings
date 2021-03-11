@@ -6,7 +6,8 @@ use Mix.Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :sec_filings, SecFilings.Repo,
-  username: "root",
+  # username: "root",
+  username: "postgres",
   password: "postgres",
   database: "sec_filings_test#{System.get_env("MIX_TEST_PARTITION")}",
   hostname: "localhost",
