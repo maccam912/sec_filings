@@ -12,7 +12,7 @@ defmodule SecFilingsWeb.LoadLive do
       end)
     end)
 
-    {:ok, assign(socket, progress: [])}
+    {:ok, assign(socket, progress: [], num_rows: 0)}
   end
 
   @impl true
@@ -29,6 +29,8 @@ defmodule SecFilingsWeb.LoadLive do
     |> Enum.to_list()
 
     new_progress = [url] ++ socket.assigns.progress
-    {:noreply, assign(socket, progress: new_progress)}
+
+    num_rows = SecFilings.Repo.aggregate(SecFilings.Raw.Index, :count, :id)
+    {:noreply, assign(socket, progress: new_progress, num_rows: num_rows)}
   end
 end
