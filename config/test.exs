@@ -8,9 +8,12 @@ use Mix.Config
 config :sec_filings, SecFilings.Repo,
   # username: "root",
   username: "postgres",
-  password: "postgres",
-  database: "sec_filings_test#{System.get_env("MIX_TEST_PARTITION")}",
-  hostname: "localhost",
+  # password: "postgres",
+  password: System.get_env("DB_PASS"),
+  # database: "sec_filings_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database: "sec-filings-db-test",
+  # hostname: "localhost",
+  hostname: "sec-filings-db.database.windows.net",
   pool: Ecto.Adapters.SQL.Sandbox
 
 # We don't run a server during test. If one is required,

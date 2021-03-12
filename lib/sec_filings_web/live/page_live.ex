@@ -7,7 +7,7 @@ defmodule SecFilingsWeb.PageLive do
     companies =
       SecFilings.Repo.all(
         from c in SecFilings.Raw.Index,
-          where: c.form_type in ["10-K", "10-Q"],
+          where: c.form_type in ["10-K", "10-Q", "8-K"],
           order_by: [desc: :date_filed],
           limit: 100
       )
@@ -20,7 +20,7 @@ defmodule SecFilingsWeb.PageLive do
     companies =
       SecFilings.Repo.all(
         from c in SecFilings.Raw.Index,
-          where: c.form_type in ["10-K", "10-Q"] and like(c.company_name, ^"%#{query}%"),
+          where: c.form_type in ["10-K", "10-Q", "8-K"] and like(c.company_name, ^"%#{query}%"),
           order_by: [desc: :date_filed],
           limit: 1000
       )
