@@ -28,7 +28,7 @@ defmodule SecFilingsWeb.LoadLive do
     end)
     |> Enum.to_list()
 
-    new_progress = socket.assigns.progress ++ [url]
+    new_progress = [url] ++ socket.assigns.progress
     {:noreply, assign(socket, progress: new_progress)}
   end
 end
