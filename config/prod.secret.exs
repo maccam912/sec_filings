@@ -4,15 +4,15 @@
 # remember to add this file to your .gitignore.
 use Mix.Config
 
-#database_url =
+# database_url =
 #  System.get_env("DATABASE_URL") ||
 #    raise """
 #    environment variable DATABASE_URL is missing.
 #    For example: ecto://USER:PASS@HOST/DATABASE
 #    """
 
-#config :sec_filings, SecFilings.Repo,
-  # ssl: true,
+# config :sec_filings, SecFilings.Repo,
+# ssl: true,
 #  url: database_url,
 #  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
