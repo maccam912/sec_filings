@@ -7,10 +7,11 @@ config :sec_filings, SecFilings.Repo,
   # password: "postgres",
   password: System.get_env("DB_PASS"),
   # database: "sec_filings_dev",
-  database: "sec-filings-db-dev",
+  # database: "sec-filings-db-dev",
+  database: "sec-filings-db",
   hostname: "sec-filings-db.database.windows.net",
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 100
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
