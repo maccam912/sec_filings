@@ -13,17 +13,6 @@ config :sec_filings, SecFilingsWeb.Endpoint,
   url: [host: "sec-filings.gigalixirapp.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
-config :sec_filings, SecFilings.Repo,
-  # username: "root",
-  username: "postgres",
-  # password: "postgres",
-  password: System.get_env("DB_PASS"),
-  # database: "sec_filings_test#{System.get_env("MIX_TEST_PARTITION")}",
-  database: "sec-filings-db",
-  # hostname: "localhost",
-  hostname: "sec-filings-db.database.windows.net",
-  pool: Ecto.Adapters.SQL.Sandbox
-
 # Do not print debug messages in production
 config :logger, level: :info
 
