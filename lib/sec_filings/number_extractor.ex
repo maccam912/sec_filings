@@ -1,18 +1,16 @@
 defmodule SecFilings.NumberExtractor do
-  require IEx
 
   def get_tags(filename) do
     url = "https://www.sec.gov/Archives/#{filename}"
     {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
     doc = Floki.parse_document!(body)
     tags = IO.inspect(Floki.find(doc, "ix:nonfraction"))
-    IEx.pry()
     tags
   end
 
   def tags_map(tags) do
     tags
-    |> Enum.map(fn {"ix:nonfraction", [attrs], value} ->
+    |> Enum.map(fn {"ix:nonfraction", [_attrs], value} ->
       {"k", value}
     end)
   end
