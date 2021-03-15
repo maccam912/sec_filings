@@ -18,18 +18,22 @@ RUN mix compile
 RUN npm install --prefix ./assets
 RUN npm run deploy --prefix ./assets
 RUN mix phx.digest
-RUN mix release
-
-FROM alpine:latest AS deploy
-
-ENV MIX_ENV=prod
-ENV PORT=4000
-
-WORKDIR /opt/app
-
-RUN apk --no-cache add ncurses elixir npm
-COPY --from=build /opt/app/ /opt/app/
+#RUN mix release
 
 EXPOSE 4000
 
-CMD ["_build/prod/rel/sec_filings/bin/sec_filings", "start"]
+CMD ["mix", "phx.server"]
+
+#FROM alpine:latest AS deploy
+
+#ENV MIX_ENV=prod
+#ENV PORT=4000
+
+#WORKDIR /opt/app
+
+#RUN apk --no-cache add ncurses elixir npm
+#COPY --from=build /opt/app/ /opt/app/
+
+#EXPOSE 4000
+
+#CMD ["_build/prod/rel/sec_filings/bin/sec_filings", "start"]
