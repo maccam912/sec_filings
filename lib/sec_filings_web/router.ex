@@ -20,7 +20,8 @@ defmodule SecFilingsWeb.Router do
     live "/", PageLive, :index
 
     live "/cik/:cik", CikLive, :index
-    # live "/load", LoadLive, :index
+
+    live "/cik/tags/:cik/:adsh", TagsLive, :index
   end
 
   # Other scopes may use custom stacks.

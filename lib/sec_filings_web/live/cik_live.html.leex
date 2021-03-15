@@ -6,7 +6,8 @@
 <tr>
 <td><%= table.form_type %></td>
 <td><%= table.date_filed %></td>
-<td><%= link(table.filename, to: "https://www.sec.gov/Archives/#{table.filename}") %></td>
+<td><%= link(table.filename, to: "tags/#{@cik}/#{get_adsh(table.filename)}") %></td>
+<!--<td><%= link(table.filename, to: "https://www.sec.gov/Archives/#{table.filename}") %></td>-->
 </tr>
 <% end %>
 </table>
