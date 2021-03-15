@@ -23,12 +23,13 @@ RUN mix release
 FROM alpine:latest AS deploy
 
 ENV MIX_ENV=prod
+ENV PORT=4000
 
 WORKDIR /opt/app
 
 RUN apk --no-cache add ncurses elixir npm
 COPY --from=build /opt/app/ /opt/app/
 
-EXPOSE 80
+EXPOSE 4000
 
 CMD ["_build/prod/rel/sec_filings/bin/sec_filings", "start"]
