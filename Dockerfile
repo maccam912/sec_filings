@@ -1,7 +1,7 @@
 FROM alpine:latest AS build
 
 ENV MIX_ENV=prod
-ARG DATABASE_URL=ecto://postgres:postgres@localhost:5432/sec_filings
+ARG DATABASE_URL=ecto://postgres:postgres@changeme:5432/sec_filings
 ARG SECRET_KEY_BASE=MOd4x4LrY1W4Ahn+MQZ7jbFYoZP3oLbV+RND/3nb23ZrXFR0nFMpsSfJI6I8PWdQ
 ARG PORT=4000
 
@@ -23,8 +23,6 @@ RUN mix release
 FROM alpine:latest AS deploy
 
 ENV MIX_ENV=prod
-ARG SECRET_KEY_BASE=MOd4x4LrY1W4Ahn+MQZ7jbFYoZP3oLbV+RND/3nb23ZrXFR0nFMpsSfJI6I8PWdQ
-ARG DATABASE_URL=ecto://postgres:postgres@localhost:5432/sec_filings
 
 WORKDIR /opt/app
 
