@@ -27,7 +27,7 @@ ENV PORT=4000
 
 WORKDIR /opt/app
 
-RUN apk --no-cache add ncurses
-COPY --from=build /opt/app/_build/prod/ /opt/app/_build/prod/
+RUN apk --no-cache add ncurses elixir npm
+COPY --from=build /opt/app/ /opt/app/
 
 CMD ["_build/prod/rel/sec_filings/bin/sec_filings", "start"]
