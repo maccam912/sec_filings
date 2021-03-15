@@ -24,10 +24,13 @@ FROM alpine:latest AS deploy
 
 ENV MIX_ENV=prod
 ARG SECRET_KEY_BASE=MOd4x4LrY1W4Ahn+MQZ7jbFYoZP3oLbV+RND/3nb23ZrXFR0nFMpsSfJI6I8PWdQ
+ARG DATABASE_URL=ecto://postgres:postgres@localhost:5432/sec_filings
 
 WORKDIR /opt/app
 
 RUN apk --no-cache add ncurses elixir npm
 COPY --from=build /opt/app/ /opt/app/
+
+EXPOSE 80
 
 CMD ["_build/prod/rel/sec_filings/bin/sec_filings", "start"]
