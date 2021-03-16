@@ -13,7 +13,7 @@ defmodule SecFilingsWeb.CikLive do
       SecFilings.Repo.all(
         from c in SecFilings.Raw.Index,
           where: c.form_type in ["10-K", "10-Q"] and c.cik == ^Map.get(params, "cik"),
-          order_by: [desc: :date_filed]
+          order_by: [desc: :date_filed, asc: :form_type]
       )
 
     {:ok,

@@ -1,10 +1,10 @@
 <%= link("Sec Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %>
 <table>
 <tr><th>Value</th><th>Tag</th></tr>
-<%= for tag <- Map.keys(@tags) do %>
+<%= for tag <- @tag_keys do %>
 <tr>
 <td>
-<%= Map.get(Map.get(@tags, tag), "fixed_value") %>
+<%= SecFilings.HumanizeNumbers.humanize(Map.get(Map.get(@tags, tag), "fixed_value")) %>
 </td>
 <td>
 <%= tag %>

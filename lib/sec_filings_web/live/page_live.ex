@@ -7,8 +7,8 @@ defmodule SecFilingsWeb.PageLive do
     companies =
       SecFilings.Repo.all(
         from c in SecFilings.Raw.Index,
-          where: c.form_type in ["10-K", "10-Q", "8-K"],
-          order_by: [desc: :date_filed],
+          where: c.form_type in ["10-K", "10-Q"],
+          order_by: [desc: :date_filed, asc: :company_name],
           limit: 100
       )
 
@@ -20,9 +20,9 @@ defmodule SecFilingsWeb.PageLive do
     companies =
       SecFilings.Repo.all(
         from c in SecFilings.Raw.Index,
-          where: c.form_type in ["10-K", "10-Q", "8-K"] and like(c.company_name, ^"%#{query}%"),
-          order_by: [desc: :date_filed],
-          limit: 1000
+          where: c.form_type in ["10-K", "10-Q"] and ilike(c.company_name, ^"%#{query}%"),
+          order_by: [desc: :date_filed, asc: :company_name],
+          limit: 100
       )
 
     {:noreply, assign(socket, tables: companies, query: query)}
