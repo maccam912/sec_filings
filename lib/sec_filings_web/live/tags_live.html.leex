@@ -1,4 +1,5 @@
 <%= link("Sec Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %>
+<%= link("Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
 <table>
 <tr><th>Value</th><th>Tag</th></tr>
 <%= for tag <- @tag_keys do %>
