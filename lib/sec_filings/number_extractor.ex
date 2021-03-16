@@ -1,7 +1,13 @@
 defmodule SecFilings.NumberExtractor do
+  def get_doc(url) do
+    {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
+    true = Cachex.put!(:filings_cache, url, body)
+    body
+  end
+
   def get_tag_docs(filename) do
     url = "https://www.sec.gov/Archives/#{filename}"
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
+    body = Cachex.get!(:filings_cache, url) || get_doc(url)
     numbers = Regex.scan(~r/<ix:nonFraction[^>]*>[^<]*<\/ix:nonFraction>/, body)
     numbers
   end
