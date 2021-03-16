@@ -14,7 +14,7 @@ database_url =
 config :sec_filings, SecFilings.Repo,
   ssl: true,
   url: database_url,
-  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "1")
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
 secret_key_base =
   System.get_env("SECRET_KEY_BASE") ||
@@ -25,7 +25,7 @@ secret_key_base =
 
 config :sec_filings, SecFilingsWeb.Endpoint,
   http: [
-    port: String.to_integer(System.get_env("PORT") || "5000"),
+    port: String.to_integer(System.get_env("PORT") || "80"),
     transport_options: [socket_opts: [:inet6]]
   ],
   secret_key_base: secret_key_base

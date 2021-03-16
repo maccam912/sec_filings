@@ -20,7 +20,7 @@ RUN npm run deploy --prefix ./assets
 RUN mix phx.digest
 #RUN mix release
 
-EXPOSE 5000
+EXPOSE 80
 
 CMD ["mix", "phx.server"]
 
