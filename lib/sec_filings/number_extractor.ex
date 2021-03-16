@@ -5,6 +5,46 @@ defmodule SecFilings.NumberExtractor do
     body
   end
 
+  def parse_desc({"description", [], [desc_text, text]}) do
+    {"text", [], doc} = text
+
+    if length(doc) == 1 do
+      {String.trim(desc_text), List.first(doc)}
+    else
+      {String.trim(desc_text), nil}
+    end
+  end
+
+  def parse_desc({"text", [], doc}) do
+    {nil, doc}
+  end
+
+  def parse_single_document(doc) do
+    {"document", [], [{"type", [], [type | [seq]]}]} = doc
+    {"sequence", [], [seq_num, filename]} = seq
+    {"filename", [], [filename, description]} = filename
+    {description, doc} = parse_desc(description)
+
+    type = String.trim(type)
+    {seq_num, ""} = Integer.parse(String.trim(seq_num))
+    filename = String.trim(filename)
+
+    %{
+      type: type,
+      sequence_number: seq_num,
+      filename: filename,
+      description: description,
+      text: doc
+    }
+  end
+
+  def get_documents(body) do
+    doc = Floki.parse_document!(body)
+
+    Floki.find(doc, "document")
+    |> Enum.map(fn doc -> parse_single_document(doc) end)
+  end
+
   def get_tag_docs(filename) do
     url = "https://www.sec.gov/Archives/#{filename}"
     body = Cachex.get!(:filings_cache, url) || get_doc(url)
