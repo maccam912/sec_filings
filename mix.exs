@@ -20,7 +20,7 @@ defmodule SecFilings.MixProject do
   def application do
     [
       mod: {SecFilings.Application, []},
-      extra_applications: [:logger, :runtime_tools, :iex]
+      extra_applications: [:logger, :runtime_tools, :cachex, :iex]
     ]
   end
 
@@ -51,7 +51,8 @@ defmodule SecFilings.MixProject do
       {:httpoison, "~> 1.8.0"},
       {:nimble_csv, "~> 1.1.0"},
       {:datix, "~> 0.1.1"},
-      {:flow, "~> 1.1.0"}
+      {:flow, "~> 1.1.0"},
+      {:cachex, "~> 3.3"}
     ]
   end
 

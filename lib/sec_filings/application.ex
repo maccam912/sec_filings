@@ -14,9 +14,10 @@ defmodule SecFilings.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: SecFilings.PubSub},
       # Start the Endpoint (http/https)
-      SecFilingsWeb.Endpoint
+      SecFilingsWeb.Endpoint,
       # Start a worker by calling: SecFilings.Worker.start_link(arg)
       # {SecFilings.Worker, arg}
+      {Cachex, [name: :filing_cache, limit: 2000]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
