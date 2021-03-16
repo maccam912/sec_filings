@@ -1,41 +1,41 @@
 defmodule SecFilings.NumberExtractor do
-
-  def get_tags(filename) do
-    url = "https://www.sec.gov/Archives/#{filename}"
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
-    doc = Floki.parse_document!(body)
-    tags = IO.inspect(Floki.find(doc, "ix:nonfraction"))
-    tags
-  end
-
-  def tags_map(tags) do
-    tags
-    |> Enum.map(fn {"ix:nonfraction", [_attrs], value} ->
-      {"k", value}
-    end)
-  end
-
-  def old_get_tags(filename) do
+  def get_tag_docs(filename) do
     url = "https://www.sec.gov/Archives/#{filename}"
     {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
     numbers = Regex.scan(~r/<ix:nonFraction[^>]*>[^<]*<\/ix:nonFraction>/, body)
     numbers
   end
 
-  def extract_tag(item) do
-    IO.inspect(Floki.parse_document(item))
-    name = Regex.run(~r/.*name="([^"]*)"/, item)
-    value = Regex.run(~r/<ix:nonFraction[^>]*>(.*)<\/ix:nonFraction>/, item)
-    {Enum.at(name, 1), Enum.at(value, 1)}
-  end
+  def extract_tags(tag_docs) do
+    tag_docs
+    |> Enum.map(fn item ->
+      [{"ix:nonfraction", attrs, [num]}] = Floki.parse_document!(item)
 
-  def old_tags_map(tags) do
-    tags
-    |> Enum.flat_map(fn item -> item end)
-    |> Enum.map(fn item -> extract_tag(item) end)
-    |> Enum.filter(fn {_, v} -> not is_nil(v) end)
-    |> Enum.reduce(%{}, fn {k, v}, acc ->
-      Map.put(acc, k, v)
+      fixed_num =
+        num
+        |> String.replace(",", "")
+        |> String.replace("$", "")
+
+      parsed_num = Float.parse(fixed_num)
+
+      new_attrs =
+        Enum.reduce(attrs, %{}, fn {name, value}, acc ->
+          Map.put(acc, name, value)
+        end)
+
+      {new_attrs, parsed_num}
+    end)
+    |> Enum.filter(fn {_, parsed_num} ->
+      parsed_num != :error
+    end)
+    |> Enum.map(fn {attrs, {num, _}} ->
+      {dec_movement, ""} = Integer.parse(Map.get(attrs, "scale"))
+      scaled_num = num * :math.pow(10, dec_movement)
+      Map.put(attrs, "value", num)
+      Map.put(attrs, "fixed_value", scaled_num)
+    end)
+    |> Enum.reduce(%{}, fn item, acc ->
+      Map.put(acc, Map.get(item, "name"), item)
     end)
   end
 end

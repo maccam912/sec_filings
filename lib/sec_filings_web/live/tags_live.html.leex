@@ -4,7 +4,7 @@
 <%= for tag <- Map.keys(@tags) do %>
 <tr>
 <td>
-<%= Map.get(@tags, tag) %>
+<%= Map.get(Map.get(@tags, tag), "fixed_value") %>
 </td>
 <td>
 <%= tag %>

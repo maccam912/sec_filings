@@ -16,16 +16,7 @@ defmodule SecFilingsWeb.CikLive do
           order_by: [desc: :date_filed]
       )
 
-    send(self(), :update)
-
     {:ok,
      assign(socket, params: params, cik: Map.get(params, "cik"), tables: companies, debug: "")}
-  end
-
-  @impl true
-  def handle_info(:update, state) do
-    c1 = List.first(state.assigns.tables)
-    IO.inspect(SecFilings.NumberExtractor.get_tags(c1.filename))
-    {:noreply, assign(state, debug: "")}
   end
 end

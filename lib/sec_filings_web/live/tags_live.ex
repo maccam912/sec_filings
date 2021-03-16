@@ -7,8 +7,8 @@ defmodule SecFilingsWeb.TagsLive do
   end
 
   def get_tags(cik, adsh) do
-    tags = SecFilings.NumberExtractor.get_tags(gen_filename(cik, adsh))
-    IO.inspect(SecFilings.NumberExtractor.tags_map(tags))
+    tag_docs = SecFilings.NumberExtractor.get_tag_docs(gen_filename(cik, adsh))
+    extracted = SecFilings.NumberExtractor.extract_tags(tag_docs)
   end
 
   @impl true
