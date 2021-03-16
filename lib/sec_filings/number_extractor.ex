@@ -55,7 +55,13 @@ defmodule SecFilings.NumberExtractor do
       end
     end)
     |> Enum.reduce(%{}, fn item, acc ->
-      Map.put(acc, Map.get(item, "name"), item)
+      key = Map.get(item, "name")
+
+      if not Map.has_key?(acc, key) do
+        Map.put(acc, key, item)
+      else
+        acc
+      end
     end)
   end
 
