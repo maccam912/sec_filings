@@ -17,7 +17,9 @@ defmodule SecFilingsWeb.TagsLive do
      assign(socket,
        adsh: adsh,
        cik: cik,
-       documents: []
+       documents: [],
+       revenue: 0,
+       loading: true
      )}
   end
 
@@ -43,9 +45,25 @@ defmodule SecFilingsWeb.TagsLive do
   def handle_info(:get_documents, socket) do
     cik = socket.assigns.cik
     adsh = socket.assigns.adsh
-    documents = SecFilings.NumberExtractor.get_documents(cik, adsh)
+
+    documents =
+      SecFilings.NumberExtractor.get_documents(cik, adsh)
+      |> Enum.filter(fn document -> length(document[:reports]) > 0 end)
+
+    revenue_doc =
+      documents
+      |> Enum.filter(fn %{reports: reports} ->
+        reports
+        |> Enum.reduce(false, fn item, acc ->
+          acc || Map.has_key?(item, :revenue)
+        end)
+      end)
+      |> List.first()
+
+    %{revenue: revenue} =
+      Enum.reduce(revenue_doc[:reports], %{}, fn item, acc -> Map.merge(acc, item) end)
 
     socket = clear_flash(socket)
-    {:noreply, assign(socket, documents: documents)}
+    {:noreply, assign(socket, documents: documents, revenue: revenue, loading: false)}
   end
 end

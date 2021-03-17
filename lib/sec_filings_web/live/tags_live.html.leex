@@ -1,9 +1,6 @@
 <ul>
 <li><%= link("Text Sec Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %></li>
 <li><%= link("Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %></li>
-<%= for document <- @documents do %>
-<%= for report <- document[:reports] do %>
-<%= raw(Floki.raw_html(report)) %>
-<hr>
-<% end %>
+<%= if !@loading do %>
+<h1>Revenue: $<%= SecFilings.HumanizeNumbers.humanize(@revenue) %></h1>
 <% end %>
