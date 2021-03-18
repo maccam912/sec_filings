@@ -1,39 +1,41 @@
 defmodule SecFilings.TagParser do
-  import NimbleParsec
+  def parse(doctext) do
+    try do
+      {:ok, element, _tail} = :erlsom.simple_form(doctext)
+      {tag, attributes, content} = element
+      tag = to_string(tag)
 
-  # From https://github.com/dashbitco/nimble_parsec/blob/master/examples/simple_xml.exs
+      attr_map =
+        Enum.reduce(attributes, %{}, fn {key, value}, acc ->
+          Map.put(acc, to_string(key), to_string(value))
+        end)
 
-  tag = ascii_string([?a..?z, ?A..?Z], min: 1)
+      attr_map = Map.put(attr_map, "content", content |> Enum.map(&to_string/1))
 
-  attr =
-    ignore(string(" "))
-    |> ascii_string([?a..?z, ?A..?Z], min: 1)
-    |> concat(string("="))
-    |> ascii_string([not: ?\s], min: 1)
+      [value] = Map.get(attr_map, "content")
 
-  text = ascii_string([not: ?>], min: 1)
+      attr_map =
+        try do
+          {scaled_value, ""} = Float.parse(value)
 
-  opening_tag =
-    ignore(string("<us-gaap:"))
-    |> concat(tag)
-    |> repeat(
-      lookahead_not(ascii_char([?>]))
-      |> choice([
-        attr,
-        utf8_char([])
-      ])
-    )
-    |> ignore(string(">"))
+          real_value =
+            try do
+              {dec, ""} = Map.get(attr_map, "decimals") |> Float.parse()
+              factor = :math.pow(10, dec * -1)
+              real_value = scaled_value * factor
+              real_value
+            rescue
+              _ -> scaled_value
+            end
 
-  closing_tag = ignore(string("</us-gaap:")) |> concat(tag) |> ignore(string(">"))
+          Map.put(attr_map, "value", real_value)
+        rescue
+          MatchError -> Map.put(attr_map, "value", value)
+        end
 
-  defcombinatorp(
-    :node,
-    opening_tag
-    |> repeat(lookahead_not(string("</")) |> choice([parsec(:node), text]))
-    |> wrap()
-    |> concat(closing_tag)
-  )
-
-  defparsec(:parse, parsec(:node) |> eos())
+      {tag, attr_map}
+    catch
+      _ -> nil
+    end
+  end
 end

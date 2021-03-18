@@ -7,7 +7,7 @@
 <%= for tag <- @tag_keys do %>
 <tr>
 <td>
-<%= SecFilings.HumanizeNumbers.humanize(Map.get(Map.get(@tags, tag), "fixed_value")) %>
+<%= SecFilings.HumanizeNumbers.humanize(Map.get(Map.get(@tags, tag), "value")) %>
 </td>
 <td>
 <%= tag %>

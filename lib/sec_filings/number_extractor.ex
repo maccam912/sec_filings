@@ -5,15 +5,11 @@ defmodule SecFilings.NumberExtractor do
     body
   end
 
-  def scan_for_tags_a(body) do
-    Regex.scan(~r/<ix:nonFraction[^>]*>[^<]*<\/ix:nonFraction>/, body)
+  def scan_for_tags(body) do
+    Regex.scan(~r/<us-gaap:[^>]*>[^<]*<\/us-gaap:[^>]*>/, body)
   end
 
-  def scan_for_tags_b(body) do
-    IO.inspect(Regex.scan(~r/<us-gaap:[^>]*>[^<]*<\/us-gaap:[^>]*>/, body))
-  end
-
-  def get_tag_docs(filename) do
+  def get_tags(filename) do
     url = "https://www.sec.gov/Archives/#{filename}"
 
     body =
@@ -23,84 +19,8 @@ defmodule SecFilings.NumberExtractor do
         Cachex.get!(:filings_cache, url) || get_doc(url)
       end
 
-    scan_for_tags_b(body)
-    # numbers = scan_for_tags_a(body)
-
-    # if length(numbers) > 0 do
-    #  numbers
-    # else
-    #  scan_for_tags_b(body)
-    # end
-  end
-
-  def extract_tags(tag_docs) do
-    tag_docs
-    |> Enum.map(fn item ->
-      case Floki.parse_document!(item) do
-        [{"ix:nonfraction", attrs, [num]}] ->
-          fixed_num =
-            num
-            |> String.replace(",", "")
-            |> String.replace("$", "")
-
-          parsed_num = Float.parse(fixed_num)
-
-          new_attrs =
-            Enum.reduce(attrs, %{}, fn {name, value}, acc ->
-              Map.put(acc, name, value)
-            end)
-
-          {new_attrs, parsed_num}
-
-        [{tag, attrs, [num]}] ->
-          tag = String.replace(tag, "us-gaap:", "")
-
-          fixed_num =
-            num
-            |> String.replace(",", "")
-            |> String.replace("$", "")
-
-          new_attrs =
-            Enum.reduce(attrs, %{}, fn {name, value}, acc ->
-              Map.put(acc, name, value)
-            end)
-
-          new_attrs = Map.put(new_attrs, "name", tag)
-          parsed_num = Float.parse(fixed_num)
-          {new_attrs, parsed_num}
-
-        [{_, _, []}] ->
-          nil
-      end
-    end)
-    |> Enum.filter(fn item -> not is_nil(item) end)
-    |> Enum.filter(fn {_, parsed_num} ->
-      parsed_num != :error
-    end)
-    |> Enum.map(fn {attrs, {num, _}} ->
-      if not is_nil(Map.get(attrs, "scale")) do
-        case Integer.parse(Map.get(attrs, "scale")) do
-          {dec_movement, ""} ->
-            scaled_num = num * :math.pow(10, dec_movement)
-            Map.put(attrs, "value", num)
-            Map.put(attrs, "fixed_value", scaled_num)
-
-          _ ->
-            %{}
-        end
-      else
-        %{}
-      end
-    end)
-    |> Enum.reduce(%{}, fn item, acc ->
-      key = Map.get(item, "name")
-
-      if not Map.has_key?(acc, key) do
-        Map.put(acc, key, item)
-      else
-        acc
-      end
-    end)
+    scan_for_tags(body)
+    |> Enum.map(fn [doc] -> SecFilings.TagParser.parse(doc) end)
   end
 
   def fixed_value_gaap_tags(tags) do

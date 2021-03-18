@@ -1,4 +1,8 @@
 defmodule SecFilings.HumanizeNumbers do
+  def humanize(n) when n < 0 do
+    "-#{humanize(-1 * n)}"
+  end
+
   def humanize(n) when n < 1.0e6 do
     "#{n}"
   end

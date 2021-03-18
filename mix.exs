@@ -53,7 +53,7 @@ defmodule SecFilings.MixProject do
       {:datix, "~> 0.1.1"},
       {:flow, "~> 1.1.0"},
       {:cachex, "~> 3.3"},
-      {:nimble_parsec, "~> 1.1.0"}
+      {:erlsom, "~> 1.5"}
     ]
   end
 
