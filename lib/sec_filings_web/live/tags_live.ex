@@ -6,64 +6,25 @@ defmodule SecFilingsWeb.TagsLive do
     "edgar/data/#{cik}/#{adsh}.txt"
   end
 
+  def get_tags(cik, adsh) do
+    tag_docs = SecFilings.NumberExtractor.get_tag_docs(gen_filename(cik, adsh))
+    extracted = SecFilings.NumberExtractor.extract_tags(tag_docs)
+    SecFilings.NumberExtractor.fixed_value_gaap_tags(extracted)
+  end
+
   @impl true
   def mount(params, _session, socket) do
     adsh = Map.get(params, "adsh")
     cik = Map.get(params, "cik")
+    tags = get_tags(cik, adsh)
 
-    send(self(), :update)
-
-    {:ok,
-     assign(socket,
-       adsh: adsh,
-       cik: cik,
-       documents: [],
-       revenue: 0,
-       loading: true
-     )}
-  end
-
-  @impl true
-  def handle_info(:update, socket) do
-    cik = socket.assigns.cik
-    adsh = socket.assigns.adsh
-    documents = Cachex.get!(:filings_cache, {cik, adsh})
-
-    socket =
-      if is_nil(documents) do
-        put_flash(socket, :info, "Form not cached. Give us 60 seconds...")
-      else
-        socket
-      end
-
-    send(self(), :get_documents)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info(:get_documents, socket) do
-    cik = socket.assigns.cik
-    adsh = socket.assigns.adsh
-
-    documents =
-      SecFilings.NumberExtractor.get_documents(cik, adsh)
-      |> Enum.filter(fn document -> length(document[:reports]) > 0 end)
-
-    revenue_doc =
-      documents
-      |> Enum.filter(fn %{reports: reports} ->
-        reports
-        |> Enum.reduce(false, fn item, acc ->
-          acc || Map.has_key?(item, :revenue)
-        end)
+    ordered_tag_keys =
+      tags
+      |> Enum.sort_by(fn {_, v} ->
+        -1 * Map.get(v, "fixed_value")
       end)
-      |> List.first()
+      |> Enum.map(fn {k, _} -> k end)
 
-    %{revenue: revenue} =
-      Enum.reduce(revenue_doc[:reports], %{}, fn item, acc -> Map.merge(acc, item) end)
-
-    socket = clear_flash(socket)
-    {:noreply, assign(socket, documents: documents, revenue: revenue, loading: false)}
+    {:ok, assign(socket, tags: tags, tag_keys: ordered_tag_keys, adsh: adsh, cik: cik)}
   end
 end

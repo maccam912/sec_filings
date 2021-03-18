@@ -53,7 +53,6 @@ defmodule SecFilings.MixProject do
       {:datix, "~> 0.1.1"},
       {:flow, "~> 1.1.0"},
       {:cachex, "~> 3.3"}
-      # {:html5ever, "~> 0.8.0"}
     ]
   end
 
