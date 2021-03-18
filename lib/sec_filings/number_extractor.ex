@@ -5,11 +5,31 @@ defmodule SecFilings.NumberExtractor do
     body
   end
 
+  def scan_for_tags_a(body) do
+    Regex.scan(~r/<ix:nonFraction[^>]*>[^<]*<\/ix:nonFraction>/, body)
+  end
+
+  def scan_for_tags_b(body) do
+    IO.inspect(Regex.scan(~r/<link:label[^>]*>/, body))
+  end
+
   def get_tag_docs(filename) do
     url = "https://www.sec.gov/Archives/#{filename}"
-    body = Cachex.get!(:filings_cache, url) || get_doc(url)
-    numbers = Regex.scan(~r/<ix:nonFraction[^>]*>[^<]*<\/ix:nonFraction>/, body)
-    numbers
+
+    body =
+      if Mix.env() in [:dev, :test] do
+        get_doc(url)
+      else
+        Cachex.get!(:filings_cache, url) || get_doc(url)
+      end
+
+    numbers = scan_for_tags_a(body)
+
+    if length(numbers) > 0 do
+      numbers
+    else
+      scan_for_tags_b(body)
+    end
   end
 
   def extract_tags(tag_docs) do
