@@ -18,15 +18,15 @@ defmodule SecFilings.TagParser do
         try do
           {scaled_value, ""} = Float.parse(value)
 
-          real_value =
-            try do
-              {dec, ""} = Map.get(attr_map, "decimals") |> Float.parse()
-              factor = :math.pow(10, dec * -1)
-              real_value = scaled_value * factor
-              real_value
-            rescue
-              _ -> scaled_value
-            end
+          real_value = scaled_value
+          # try do
+          #   {dec, ""} = Map.get(attr_map, "decimals") |> Float.parse()
+          #   factor = :math.pow(10, dec * -1)
+          #   real_value = scaled_value * factor
+          #   real_value
+          # rescue
+          #   _ -> scaled_value
+          # end
 
           Map.put(attr_map, "value", real_value)
         rescue

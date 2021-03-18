@@ -16,20 +16,16 @@ defmodule SecFilingsWeb.TagsLive do
     cik = Map.get(params, "cik")
     tags = get_tags(cik, adsh)
 
-    ordered_tag_keys =
-      tags
-      |> Enum.filter(fn {_, %{"value" => v}} ->
-        is_float(v)
-      end)
-      |> Enum.sort_by(fn {_, %{"value" => v}} ->
-        -1 * v
-      end)
-      |> Enum.map(fn {k, _} -> k end)
-
     tags_map =
       tags
       |> Enum.reduce(%{}, fn {name, content}, acc ->
         Map.put(acc, name, content)
+      end)
+
+    ordered_tag_keys =
+      Map.keys(tags_map)
+      |> Enum.filter(fn key ->
+        is_float(Map.get(Map.get(tags_map, key), "value"))
       end)
 
     {:ok, assign(socket, tags: tags_map, tag_keys: ordered_tag_keys, adsh: adsh, cik: cik)}
