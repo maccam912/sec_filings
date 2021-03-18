@@ -10,7 +10,7 @@ defmodule SecFilings.NumberExtractor do
   end
 
   def scan_for_tags_b(body) do
-    IO.inspect(Regex.scan(~r/<link:label[^>]*>/, body))
+    IO.inspect(Regex.scan(~r/<us-gaap:[^>]*>[^<]*<\/us-gaap:[^>]*>/, body))
   end
 
   def get_tag_docs(filename) do
@@ -23,13 +23,14 @@ defmodule SecFilings.NumberExtractor do
         Cachex.get!(:filings_cache, url) || get_doc(url)
       end
 
-    numbers = scan_for_tags_a(body)
+    scan_for_tags_b(body)
+    # numbers = scan_for_tags_a(body)
 
-    if length(numbers) > 0 do
-      numbers
-    else
-      scan_for_tags_b(body)
-    end
+    # if length(numbers) > 0 do
+    #  numbers
+    # else
+    #  scan_for_tags_b(body)
+    # end
   end
 
   def extract_tags(tag_docs) do
@@ -49,6 +50,23 @@ defmodule SecFilings.NumberExtractor do
               Map.put(acc, name, value)
             end)
 
+          {new_attrs, parsed_num}
+
+        [{tag, attrs, [num]}] ->
+          tag = String.replace(tag, "us-gaap:", "")
+
+          fixed_num =
+            num
+            |> String.replace(",", "")
+            |> String.replace("$", "")
+
+          new_attrs =
+            Enum.reduce(attrs, %{}, fn {name, value}, acc ->
+              Map.put(acc, name, value)
+            end)
+
+          new_attrs = Map.put(new_attrs, "name", tag)
+          parsed_num = Float.parse(fixed_num)
           {new_attrs, parsed_num}
 
         [{_, _, []}] ->

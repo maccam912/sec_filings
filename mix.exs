@@ -52,7 +52,8 @@ defmodule SecFilings.MixProject do
       {:nimble_csv, "~> 1.1.0"},
       {:datix, "~> 0.1.1"},
       {:flow, "~> 1.1.0"},
-      {:cachex, "~> 3.3"}
+      {:cachex, "~> 3.3"},
+      {:nimble_parsec, "~> 1.1.0"}
     ]
   end
 
