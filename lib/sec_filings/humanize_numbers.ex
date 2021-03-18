@@ -3,8 +3,12 @@ defmodule SecFilings.HumanizeNumbers do
     "-#{humanize(-1 * n)}"
   end
 
-  def humanize(n) when n < 1.0e6 do
+  def humanize(n) when n < 1.0e3 do
     "#{n}"
+  end
+
+  def humanize(n) when 1.0e3 <= n and n < 1.0e6 do
+    "#{Float.round(n / 1.0e3, 1)} Thousand"
   end
 
   def humanize(n) when 1.0e6 <= n and n < 1.0e9 do

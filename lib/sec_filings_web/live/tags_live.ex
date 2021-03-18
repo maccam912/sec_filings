@@ -28,6 +28,20 @@ defmodule SecFilingsWeb.TagsLive do
         is_float(Map.get(Map.get(tags_map, key), "value"))
       end)
 
-    {:ok, assign(socket, tags: tags_map, tag_keys: ordered_tag_keys, adsh: adsh, cik: cik)}
+    {:ok,
+     assign(socket, tags: tags_map, tag_keys: ordered_tag_keys, adsh: adsh, cik: cik, query: "")}
+  end
+
+  @impl true
+  def handle_event("search", %{"q" => query}, socket) do
+    companies =
+      SecFilings.Repo.all(
+        from c in SecFilings.Raw.Index,
+          where: c.form_type in ["10-K", "10-Q"] and ilike(c.company_name, ^"%#{query}%"),
+          order_by: [desc: :date_filed, asc: :company_name],
+          limit: 100
+      )
+
+    {:noreply, assign(socket, tables: companies, query: query)}
   end
 end

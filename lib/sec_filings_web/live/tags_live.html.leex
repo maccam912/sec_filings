@@ -1,17 +1,21 @@
-<ul>
-<li><%= link("Text Sec Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %></li>
-<li><%= link("Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %></li>
-</ul>
+<%= link("Text Sec Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %> | <%= link("Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
+<hr>
+<form phx-change="search" phx-submit="search">
+    <label for="q">Filter Tag</label>
+    <input type="text" name="q" phx-debounce="150" value="<%= @query %>" placeholder="Filter" autocomplete="off"/>
+</form>
 <table>
 <tr><th>Value</th><th>Tag</th></tr>
-<%= for tag <- @tag_keys do %>
-<tr>
-<td>
-<%= SecFilings.HumanizeNumbers.humanize(Map.get(Map.get(@tags, tag), "value")) %>
-</td>
-<td>
-<%= tag %>
-</td>
-</tr>
+<%= for tag <- Enum.sort(@tag_keys) do %>
+<%= if String.contains?(String.downcase(tag), String.downcase(@query)) do %>
+    <tr>
+    <td>
+    <%= SecFilings.HumanizeNumbers.humanize(Map.get(Map.get(@tags, tag), "value")) %>
+    </td>
+    <td>
+    <%= tag %>
+    </td>
+    </tr>
+<% end %>
 <% end %>
 </table>
