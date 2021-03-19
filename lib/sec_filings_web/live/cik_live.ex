@@ -19,4 +19,11 @@ defmodule SecFilingsWeb.CikLive do
     {:ok,
      assign(socket, params: params, cik: Map.get(params, "cik"), tables: companies, debug: "")}
   end
+
+  @impl true
+  def handle_event("feedback", %{"feedback" => feedback}, socket) do
+    fb = %SecFilings.SecFilings.Feedback{feedback: feedback}
+    SecFilings.Repo.insert(fb)
+    {:noreply, assign(socket, feedback: "Thanks!")}
+  end
 end

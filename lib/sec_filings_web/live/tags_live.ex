@@ -42,11 +42,18 @@ defmodule SecFilingsWeb.TagsLive do
         {:desc, Date}
       )
 
-    {:ok, assign(socket, tags: tag_pairs, adsh: adsh, cik: cik, query: "")}
+    {:ok, assign(socket, tags: tag_pairs, adsh: adsh, cik: cik, query: "", feedback: "")}
   end
 
   @impl true
   def handle_event("search", %{"q" => query}, socket) do
     {:noreply, assign(socket, query: query)}
+  end
+
+  @impl true
+  def handle_event("feedback", %{"feedback" => feedback}, socket) do
+    fb = %SecFilings.SecFilings.Feedback{feedback: feedback}
+    SecFilings.Repo.insert(fb)
+    {:noreply, assign(socket, feedback: "Thanks!")}
   end
 end

@@ -1,3 +1,8 @@
+<form phx-submit="feedback">
+    <label for="feedback">Submit feedback</label>
+    <input type="text" name="feedback" phx-debounce="150" value="<%= @feedback %>" placeholder="Send Feedback" autocomplete="off"/>
+    <input type="submit"/>
+</form>
 <%= link("Text Sec Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %> | <%= link("Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
 <hr>
 <form phx-change="search" phx-submit="search">
