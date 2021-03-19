@@ -12,7 +12,7 @@ defmodule SecFilingsWeb.PageLive do
           limit: 300
       )
 
-    {:ok, assign(socket, tables: companies, query: "")}
+    {:ok, assign(socket, tables: companies, query: "", feedback: "")}
   end
 
   @impl true

@@ -17,7 +17,13 @@ defmodule SecFilingsWeb.CikLive do
       )
 
     {:ok,
-     assign(socket, params: params, cik: Map.get(params, "cik"), tables: companies, debug: "")}
+     assign(socket,
+       params: params,
+       cik: Map.get(params, "cik"),
+       tables: companies,
+       debug: "",
+       feedback: ""
+     )}
   end
 
   @impl true
