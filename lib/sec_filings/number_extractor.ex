@@ -6,7 +6,7 @@ defmodule SecFilings.NumberExtractor do
   end
 
   def scan_for_tags(body) do
-    Regex.scan(~r/<us-gaap:[^>]*>[^<]*<\/us-gaap:[^>]*>/, body)
+    Regex.scan(~r/<us-gaap:[^>]*>[^<]*<\/us-gaap:[^>]*>/s, body)
   end
 
   def get_tags(filename) do
@@ -18,9 +18,28 @@ defmodule SecFilings.NumberExtractor do
       else
         Cachex.get!(:filings_cache, url) || get_doc(url)
       end
+      |> String.replace("\n", "")
 
     scan_for_tags(body)
     |> Enum.map(fn [doc] -> SecFilings.TagParser.parse(doc) end)
+  end
+
+  @spec get_contexts(any) :: any
+  def get_contexts(filename) do
+    url = "https://www.sec.gov/Archives/#{filename}"
+
+    body =
+      if Mix.env() in [:dev, :test] do
+        get_doc(url)
+      else
+        Cachex.get!(:filings_cache, url) || get_doc(url)
+      end
+      |> String.replace("\n", "")
+
+    IO.inspect(Regex.scan(~r/<context[^>]*>[^<]*<\/context>/s, body))
+
+    Regex.scan(~r/<context[^>]*>[^<]*<\/context>/s, body)
+    |> Enum.map(fn [doc] -> :erlsom.simple_form(doc) end)
   end
 
   def fixed_value_gaap_tags(tags) do
