@@ -25,14 +25,6 @@ defmodule SecFilingsWeb.TagsLive do
 
   @impl true
   def handle_event("search", %{"q" => query}, socket) do
-    companies =
-      SecFilings.Repo.all(
-        from c in SecFilings.Raw.Index,
-          where: c.form_type in ["10-K", "10-Q"] and ilike(c.company_name, ^"%#{query}%"),
-          order_by: [desc: :date_filed, asc: :company_name],
-          limit: 100
-      )
-
-    {:noreply, assign(socket, tables: companies, query: query)}
+    {:noreply, assign(socket, query: query)}
   end
 end

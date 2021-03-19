@@ -7,6 +7,7 @@
 <table>
 <tr><th>Value</th><th>Tag</th></tr>
 <%= for {key, value} <- @tags do %>
+<%= if String.contains?(String.downcase(key), String.downcase(@query)) do %>
 <tr>
 <td>
 <%= SecFilings.HumanizeNumbers.humanize(Map.get(value, "value")) %>
@@ -15,5 +16,6 @@
 <%= key %>
 </td>
 </tr>
+<% end %>
 <% end %>
 </table>
