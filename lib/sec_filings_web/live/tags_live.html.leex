@@ -6,16 +6,14 @@
 </form>
 <table>
 <tr><th>Value</th><th>Tag</th></tr>
-<%= for tag <- Enum.sort(@tag_keys) do %>
-<%= if String.contains?(String.downcase(tag), String.downcase(@query)) do %>
-    <tr>
-    <td>
-    <%= SecFilings.HumanizeNumbers.humanize(Map.get(Map.get(@tags, tag), "value")) %>
-    </td>
-    <td>
-    <%= tag %>
-    </td>
-    </tr>
-<% end %>
+<%= for {key, value} <- @tags do %>
+<tr>
+<td>
+<%= SecFilings.HumanizeNumbers.humanize(Map.get(value, "value")) %>
+</td>
+<td>
+<%= key %>
+</td>
+</tr>
 <% end %>
 </table>

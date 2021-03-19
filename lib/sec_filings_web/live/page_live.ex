@@ -9,7 +9,7 @@ defmodule SecFilingsWeb.PageLive do
         from c in SecFilings.Raw.Index,
           where: c.form_type in ["10-K", "10-Q"],
           order_by: [desc: :date_filed, asc: :company_name],
-          limit: 100
+          limit: 300
       )
 
     {:ok, assign(socket, tables: companies, query: "")}

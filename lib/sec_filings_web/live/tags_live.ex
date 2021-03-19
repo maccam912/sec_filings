@@ -14,22 +14,13 @@ defmodule SecFilingsWeb.TagsLive do
   def mount(params, _session, socket) do
     adsh = Map.get(params, "adsh")
     cik = Map.get(params, "cik")
-    tags = get_tags(cik, adsh)
 
-    tags_map =
-      tags
-      |> Enum.reduce(%{}, fn {name, content}, acc ->
-        Map.put(acc, name, content)
-      end)
+    tags =
+      get_tags(cik, adsh)
+      |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
+      |> Enum.sort_by(fn {_, %{"value" => v}} -> -v end)
 
-    ordered_tag_keys =
-      Map.keys(tags_map)
-      |> Enum.filter(fn key ->
-        is_float(Map.get(Map.get(tags_map, key), "value"))
-      end)
-
-    {:ok,
-     assign(socket, tags: tags_map, tag_keys: ordered_tag_keys, adsh: adsh, cik: cik, query: "")}
+    {:ok, assign(socket, tags: tags, adsh: adsh, cik: cik, query: "")}
   end
 
   @impl true
