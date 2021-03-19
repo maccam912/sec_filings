@@ -20,12 +20,29 @@ defmodule SecFilingsWeb.TagsLive do
       get_tags(cik, adsh)
       |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
 
-    # |> Enum.sort_by(fn {_, %{"value" => v}} -> -v end)
+    periods = SecFilings.NumberExtractor.get_periods(gen_filename(cik, adsh))
 
-    contexts = SecFilings.NumberExtractor.get_contexts(gen_filename(cik, adsh))
-    # IEx.pry()
+    tags =
+      tags
+      |> Enum.map(fn {k, v} ->
+        contextRef = Map.get(v, "contextRef")
+        {k, Map.put(v, "period", Map.get(periods, contextRef))}
+      end)
 
-    {:ok, assign(socket, tags: tags, adsh: adsh, cik: cik, query: "")}
+    tag_pairs =
+      tags
+      |> Enum.map(fn {k, v} -> {k, v} end)
+      |> Enum.sort_by(
+        fn {_, %{"period" => pd}} ->
+          case pd do
+            %{"instant" => pd} -> Date.add(pd, -1)
+            %{"endDate" => pd} -> pd
+          end
+        end,
+        {:desc, Date}
+      )
+
+    {:ok, assign(socket, tags: tag_pairs, adsh: adsh, cik: cik, query: "")}
   end
 
   @impl true

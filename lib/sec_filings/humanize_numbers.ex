@@ -30,4 +30,12 @@ defmodule SecFilings.HumanizeNumbers do
   def humanize(n) when 1.0e18 <= n and n < 1.0e21 do
     "#{Float.round(n / 1.0e18, 1)} Quintillion"
   end
+
+  def repr(%{"instant" => dt}) do
+    "#{dt}"
+  end
+
+  def repr(%{"startDate" => start_dt, "endDate" => end_dt}) do
+    "#{start_dt} til #{end_dt}"
+  end
 end

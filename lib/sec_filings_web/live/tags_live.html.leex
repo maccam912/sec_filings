@@ -4,18 +4,30 @@
     <label for="q">Filter Tag</label>
     <input type="text" name="q" phx-debounce="150" value="<%= @query %>" placeholder="Filter" autocomplete="off"/>
 </form>
-<table>
-<tr><th>Value</th><th>Tag</th></tr>
-<%= for {key, value} <- @tags do %>
-<%= if String.contains?(String.downcase(key), String.downcase(@query)) do %>
-<tr>
-<td>
-<%= SecFilings.HumanizeNumbers.humanize(Map.get(value, "value")) %>
-</td>
-<td>
-<%= key %>
-</td>
-</tr>
-<% end %>
-<% end %>
+<table width="100%">
+    <colgroup>
+        <col span="1" style="width:15%"/>
+        <col span="1" style="width:30%"/>
+        <col span="1" style="width:55%"/>
+    </colgroup>
+    <thead>
+        <tr><th>Value</th><th>Period</th><th>Tag</th></tr>
+    </thead>
+    <tbody>
+    <%= for {key, value} <- @tags do %>
+    <%= if String.contains?(String.downcase(key), String.downcase(@query)) do %>
+    <tr>
+    <td>
+    <%= SecFilings.HumanizeNumbers.humanize(Map.get(value, "value")) %>
+    </td>
+    <td>
+    <%= SecFilings.HumanizeNumbers.repr(Map.get(value, "period")) %>
+    </td>
+    <td>
+    <%= key %>
+    </td>
+    </tr>
+    <% end %>
+    <% end %>
+    </tbody>
 </table>
