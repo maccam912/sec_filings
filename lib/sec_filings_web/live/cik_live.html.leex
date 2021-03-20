@@ -1,7 +1,16 @@
 <form phx-submit="feedback">
-    <label for="feedback">Submit feedback</label>
-    <input type="text" name="feedback" phx-debounce="150" value="<%= @feedback %>" placeholder="Send Feedback" autocomplete="off"/>
-    <input type="submit"/>
+<table>
+    <colgroup>
+        <col span="1" style="width:15%"/>
+        <col span="1" style="width:70%"/>
+        <col span="1" style="width:15%"/>
+    </colgroup>
+<tr>
+    <td><label for="feedback">Feedback</label></td>
+    <td><input type="text" name="feedback" phx-debounce="150" value="<%= @feedback %>" placeholder="Send Feedback" autocomplete="off"/></td>
+    <td><input type="submit"/></td>
+</tr>
+</table>
 </form>
 <h2><%= List.first(@tables).company_name %></h2>
 <%= @debug %>

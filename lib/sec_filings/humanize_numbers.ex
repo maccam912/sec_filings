@@ -36,6 +36,6 @@ defmodule SecFilings.HumanizeNumbers do
   end
 
   def repr(%{"startDate" => start_dt, "endDate" => end_dt}) do
-    "#{start_dt} til #{end_dt}"
+    "#{start_dt} to #{end_dt}"
   end
 end

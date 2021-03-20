@@ -1,19 +1,28 @@
 <form phx-submit="feedback">
-    <label for="feedback">Submit feedback</label>
-    <input type="text" name="feedback" phx-debounce="150" value="<%= @feedback %>" placeholder="Send Feedback" autocomplete="off"/>
-    <input type="submit"/>
-</form>
-<%= link("Text Sec Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %> | <%= link("Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
-<hr>
-<form phx-change="search" phx-submit="search">
-    <label for="q">Filter Tag</label>
-    <input type="text" name="q" phx-debounce="150" value="<%= @query %>" placeholder="Filter" autocomplete="off"/>
-</form>
-<table width="100%">
+<table>
     <colgroup>
         <col span="1" style="width:15%"/>
+        <col span="1" style="width:70%"/>
+        <col span="1" style="width:15%"/>
+    </colgroup>
+<tr>
+    <td><label for="feedback">Feedback</label></td>
+    <td><input type="text" name="feedback" phx-debounce="150" value="<%= @feedback %>" placeholder="Send Feedback" autocomplete="off"/></td>
+    <td><input type="submit"/></td>
+</tr>
+</table>
+</form>
+<%= link("Text SEC Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %> &nbsp;|&nbsp; <%= link("SEC EDGAR Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
+<hr>
+<form phx-change="search" phx-submit="search">
+    <label for="q">Filter Tag (e.g. "NetIncomeLoss" or "Revenue")</label>
+    <input type="text" name="q" phx-debounce="150" value="<%= @query %>" placeholder="Filter" autocomplete="off"/>
+</form>
+<table width="183" style='table-layout:fixed'>
+    <colgroup>
+        <col span="1" style="width:20%"/>
         <col span="1" style="width:30%"/>
-        <col span="1" style="width:55%"/>
+        <col span="1" style="width:50%"/>
     </colgroup>
     <thead>
         <tr><th>Value</th><th>Period</th><th>Tag</th></tr>
