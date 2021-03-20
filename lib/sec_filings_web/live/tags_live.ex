@@ -11,6 +11,11 @@ defmodule SecFilingsWeb.TagsLive do
     SecFilings.NumberExtractor.get_tags(gen_filename(cik, adsh))
   end
 
+  def check_for_earnings(tag_pairs) do
+    tag_pairs
+    |> Enum.filter(fn {k, _} -> k == "" end)
+  end
+
   @impl true
   def mount(params, _session, socket) do
     adsh = Map.get(params, "adsh")
@@ -32,6 +37,7 @@ defmodule SecFilingsWeb.TagsLive do
     tag_pairs =
       tags
       |> Enum.map(fn {k, v} -> {k, v} end)
+      |> Enum.filter(fn {_, %{"period" => pd}} -> !is_nil(pd) end)
       |> Enum.sort_by(
         fn {_, %{"period" => pd}} ->
           case pd do
@@ -41,6 +47,8 @@ defmodule SecFilingsWeb.TagsLive do
         end,
         {:desc, Date}
       )
+
+    earnings = check_for_earnings(tag_pairs)
 
     {:ok, assign(socket, tags: tag_pairs, adsh: adsh, cik: cik, query: "", feedback: "")}
   end
