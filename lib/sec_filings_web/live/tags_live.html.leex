@@ -18,6 +18,7 @@
     <label for="q">Filter Tag (e.g. "NetIncomeLoss" or "Revenue")</label>
     <input type="text" name="q" phx-debounce="150" value="<%= @query %>" placeholder="Filter" autocomplete="off"/>
 </form>
+<%= @earnings %>
 <table width="183" style='table-layout:fixed'>
     <colgroup>
         <col span="1" style="width:20%"/>

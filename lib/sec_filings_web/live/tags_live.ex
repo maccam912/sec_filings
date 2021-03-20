@@ -13,7 +13,18 @@ defmodule SecFilingsWeb.TagsLive do
 
   def check_for_earnings(tag_pairs) do
     tag_pairs
-    |> Enum.filter(fn {k, _} -> k == "" end)
+    |> Enum.filter(fn {k, v} ->
+      String.contains?(k, "Earnings") &&
+        case v do
+          %{"period" => %{"startDate" => _, "endDate" => _}} -> true
+          _ -> false
+        end
+    end)
+    |> Enum.filter(fn {_, %{"period" => %{"startDate" => s, "endDate" => e}}} ->
+      d = Date.diff(e, s)
+      80 < d && d < 100
+    end)
+    |> Enum.map(fn {_, %{"period" => %{"endDate" => e}, "value" => v}} -> {v, e} end)
   end
 
   @impl true
@@ -50,7 +61,15 @@ defmodule SecFilingsWeb.TagsLive do
 
     earnings = check_for_earnings(tag_pairs)
 
-    {:ok, assign(socket, tags: tag_pairs, adsh: adsh, cik: cik, query: "", feedback: "")}
+    {:ok,
+     assign(socket,
+       earnings: earnings,
+       tags: tag_pairs,
+       adsh: adsh,
+       cik: cik,
+       query: "",
+       feedback: ""
+     )}
   end
 
   @impl true
