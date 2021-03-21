@@ -11,10 +11,10 @@ defmodule SecFilingsWeb.TagsLive do
     SecFilings.NumberExtractor.get_tags(gen_filename(cik, adsh))
   end
 
-  def check_for_earnings(tag_pairs) do
+  def check_for_earnings(tag_pairs, cik) do
     tag_pairs
     |> Enum.filter(fn {k, v} ->
-      String.contains?(k, "Earnings") &&
+      String.contains?(k, "EarningsPerShareDiluted") &&
         case v do
           %{"period" => %{"startDate" => _, "endDate" => _}} -> true
           _ -> false
@@ -24,7 +24,22 @@ defmodule SecFilingsWeb.TagsLive do
       d = Date.diff(e, s)
       80 < d && d < 100
     end)
-    |> Enum.map(fn {_, %{"period" => %{"endDate" => e}, "value" => v}} -> {v, e} end)
+    |> Enum.map(fn {_, %{"period" => %{"startDate" => s, "endDate" => e}, "value" => v}} ->
+      d = Date.diff(e, s)
+      {cik, ""} = Integer.parse(cik)
+
+      changeset =
+        SecFilings.Earnings.changeset(%SecFilings.Earnings{}, %{
+          cik: cik,
+          date: e,
+          period: d,
+          earnings: v
+        })
+
+      SecFilings.Repo.insert(changeset)
+      {v, e}
+    end)
+    |> Enum.uniq()
   end
 
   @impl true
@@ -59,7 +74,7 @@ defmodule SecFilingsWeb.TagsLive do
         {:desc, Date}
       )
 
-    earnings = check_for_earnings(tag_pairs)
+    earnings = check_for_earnings(tag_pairs, cik)
 
     {:ok,
      assign(socket,
