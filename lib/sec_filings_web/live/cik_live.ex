@@ -16,31 +16,44 @@ defmodule SecFilingsWeb.CikLive do
           order_by: [desc: :date_filed, asc: :form_type]
       )
 
-    earnings =
+    earnings_and_shares =
       SecFilings.Repo.all(
         from e in SecFilings.Earnings,
+          join: s in SecFilings.SharesOutstanding,
+          on: e.cik == s.cik and e.date == s.date,
           where: e.cik == ^Map.get(params, "cik"),
-          order_by: [desc: :date]
+          order_by: [desc: :date],
+          select: %{
+            cik: e.cik,
+            date: e.date,
+            earnings: e.earnings,
+            shares_outstanding: s.shares_outstanding
+          }
       )
+      |> Enum.map(fn item ->
+        Map.put(item, :total_earnings, item.earnings * item.shares_outstanding)
+      end)
 
     socket =
       assign(socket,
         params: params,
         cik: Map.get(params, "cik"),
         tables: companies,
-        earnings: earnings,
+        earnings: earnings_and_shares,
         debug: "",
         feedback: ""
       )
 
-    socket = socket |> push_event("data", %{data: get_chart(earnings)})
+    socket = socket |> push_event("data", %{data: get_chart(earnings_and_shares)})
     {:ok, socket}
   end
 
   def get_chart(earnings) do
     data =
       earnings
-      |> Enum.map(fn item -> [item.date, item.earnings] end)
+      |> Enum.map(fn item ->
+        [item.date, item.earnings, item.shares_outstanding, item.total_earnings]
+      end)
 
     data
   end
@@ -69,23 +82,10 @@ defmodule SecFilingsWeb.CikLive do
     end)
     |> Flow.map(fn {filename, tags} ->
       get_eps_step2(filename, tags)
-      send(self(), :update_earnings)
     end)
     |> Enum.to_list()
 
     {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event(:update_earnings, params, socket) do
-    earnings =
-      SecFilings.Repo.all(
-        from e in SecFilings.Earnings,
-          where: e.cik == ^Map.get(params, "cik"),
-          order_by: [desc: :date]
-      )
-
-    {:noreply, assign(socket, earnings: earnings)}
   end
 
   def get_eps_step1(filename) do
@@ -93,7 +93,7 @@ defmodule SecFilingsWeb.CikLive do
     [_, _, cik, adsh, _] = String.split(filename, ["/", "."])
 
     tags =
-      SecFilingsWeb.TagsLive.get_tags(cik, adsh)
+      SecFilings.TimeSeries.get_tags(cik, adsh)
       |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
 
     tags
@@ -104,7 +104,7 @@ defmodule SecFilingsWeb.CikLive do
     [_, _, cik, adsh, _] = String.split(filename, ["/", "."])
 
     periods =
-      SecFilings.NumberExtractor.get_periods(SecFilingsWeb.TagsLive.gen_filename(cik, adsh))
+      SecFilings.NumberExtractor.get_periods(SecFilings.TimeSeries.gen_filename(cik, adsh))
 
     tags =
       tags
@@ -127,38 +127,8 @@ defmodule SecFilingsWeb.CikLive do
         {:desc, Date}
       )
 
-    earnings = check_for_earnings(tag_pairs, cik)
-    earnings
-  end
-
-  def check_for_earnings(tag_pairs, cik) do
-    tag_pairs
-    |> Enum.filter(fn {k, v} ->
-      String.contains?(k, "EarningsPerShareDiluted") &&
-        case v do
-          %{"period" => %{"startDate" => _, "endDate" => _}} -> true
-          _ -> false
-        end
-    end)
-    |> Enum.filter(fn {_, %{"period" => %{"startDate" => s, "endDate" => e}}} ->
-      d = Date.diff(e, s)
-      80 < d && d < 100
-    end)
-    |> Enum.map(fn {_, %{"period" => %{"startDate" => s, "endDate" => e}, "value" => v}} ->
-      d = Date.diff(e, s)
-      {cik, ""} = Integer.parse(cik)
-
-      changeset =
-        SecFilings.Earnings.changeset(%SecFilings.Earnings{}, %{
-          cik: cik,
-          date: e,
-          period: d,
-          earnings: v
-        })
-
-      SecFilings.Repo.insert(changeset)
-      {v, e}
-    end)
-    |> Enum.uniq()
+    _outstanding_shares = SecFilings.TimeSeries.check_for_outstanding_shares(tag_pairs, cik)
+    earnings = Task.async(fn -> SecFilings.TimeSeries.check_for_earnings(tag_pairs, cik) end)
+    Task.await(earnings)
   end
 end

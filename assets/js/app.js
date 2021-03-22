@@ -28,10 +28,6 @@ hooks.chart = {
 
         // Draw the chart
         var option = {
-            title: {
-                text: 'Earnings per 3 month period per share',
-                left: 'center'
-            },
             legend: {
                 left: 'left'
             },
@@ -42,14 +38,26 @@ hooks.chart = {
                 type: 'time'
             },
             yAxis: {
-                // type: 'log'
+                //type: 'log'
             },
             series: [{
                 name: 'EPS',
                 type: 'line',
                 datasetIndex: 0,
+            }, {
+                name: 'Shares Outstanding',
+                type: 'line',
+                datasetIndex: 1
+            }, {
+                name: 'Total Earnings',
+                type: 'line',
+                datasetIndex: 2
             }],
             dataset: [{
+                source: []
+            }, {
+                source: []
+            }, {
                 source: []
             }]
         };
@@ -57,14 +65,21 @@ hooks.chart = {
         chart.setOption(option)
 
         this.handleEvent("data", (data) => {
-            var source = []
+            var eps = []
+            var shares_outstanding = []
+            var total_earnings = []
             data.data.forEach((item) => {
-                source.push([item[0], item[1]])
+                console.log(item)
+                eps.push([item[0], item[1]])
+                shares_outstanding.push([item[0], item[2]])
+                total_earnings.push([item[0], item[3]])
             })
 
             var option = chart.getOption()
 
-            option.dataset[0].source = source
+            option.dataset[0].source = eps
+            option.dataset[1].source = shares_outstanding
+            option.dataset[2].source = total_earnings
 
             chart.setOption(option)
         })

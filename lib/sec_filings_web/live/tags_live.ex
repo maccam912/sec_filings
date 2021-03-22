@@ -3,55 +3,17 @@ defmodule SecFilingsWeb.TagsLive do
   import Ecto.Query, warn: false
   require IEx
 
-  def gen_filename(cik, adsh) do
-    "edgar/data/#{cik}/#{adsh}.txt"
-  end
-
-  def get_tags(cik, adsh) do
-    SecFilings.NumberExtractor.get_tags(gen_filename(cik, adsh))
-  end
-
-  def check_for_earnings(tag_pairs, cik) do
-    tag_pairs
-    |> Enum.filter(fn {k, v} ->
-      String.contains?(k, "EarningsPerShareDiluted") &&
-        case v do
-          %{"period" => %{"startDate" => _, "endDate" => _}} -> true
-          _ -> false
-        end
-    end)
-    |> Enum.filter(fn {_, %{"period" => %{"startDate" => s, "endDate" => e}}} ->
-      d = Date.diff(e, s)
-      80 < d && d < 100
-    end)
-    |> Enum.map(fn {_, %{"period" => %{"startDate" => s, "endDate" => e}, "value" => v}} ->
-      d = Date.diff(e, s)
-      {cik, ""} = Integer.parse(cik)
-
-      changeset =
-        SecFilings.Earnings.changeset(%SecFilings.Earnings{}, %{
-          cik: cik,
-          date: e,
-          period: d,
-          earnings: v
-        })
-
-      SecFilings.Repo.insert(changeset)
-      {v, e}
-    end)
-    |> Enum.uniq()
-  end
-
   @impl true
   def mount(params, _session, socket) do
     adsh = Map.get(params, "adsh")
     cik = Map.get(params, "cik")
 
     tags =
-      get_tags(cik, adsh)
+      SecFilings.TimeSeries.get_tags(cik, adsh)
       |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
 
-    periods = SecFilings.NumberExtractor.get_periods(gen_filename(cik, adsh))
+    periods =
+      SecFilings.NumberExtractor.get_periods(SecFilings.TimeSeries.gen_filename(cik, adsh))
 
     tags =
       tags
@@ -74,11 +36,8 @@ defmodule SecFilingsWeb.TagsLive do
         {:desc, Date}
       )
 
-    earnings = check_for_earnings(tag_pairs, cik)
-
     {:ok,
      assign(socket,
-       earnings: earnings,
        tags: tag_pairs,
        adsh: adsh,
        cik: cik,

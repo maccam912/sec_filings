@@ -12,18 +12,12 @@
 </tr>
 </table>
 </form>
-<%= link("Text SEC Filing", to: "https://www.sec.gov/Archives/#{gen_filename(@cik, @adsh)}") %> &nbsp;|&nbsp; <%= link("SEC EDGAR Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
+<%= link("Text SEC Filing", to: "https://www.sec.gov/Archives/#{SecFilings.TimeSeries.gen_filename(@cik, @adsh)}") %> &nbsp;|&nbsp; <%= link("SEC EDGAR Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
 <hr>
 <form phx-change="search" phx-submit="search">
     <label for="q">Filter Tag (e.g. "NetIncomeLoss" or "Revenue")</label>
     <input type="text" name="q" phx-debounce="150" value="<%= @query %>" placeholder="Filter" autocomplete="off"/>
 </form>
-Three-Month EPS (Diluted):
-<ul>
-<%= for {earnings, date} <- @earnings do%>
-<li><%= "(#{date}) #{earnings}" %></li>
-<% end %>
-</ul>
 <table width="183" style='table-layout:fixed'>
     <colgroup>
         <col span="1" style="width:20%"/>
