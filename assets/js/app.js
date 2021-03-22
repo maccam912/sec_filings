@@ -16,9 +16,55 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
+import * as echarts from "echarts"
+
+let hooks = {}
+hooks.chart = {
+    mounted() {
+        var chart = echarts.init(this.el);
+        // Draw the chart
+        var option = {
+            legend: {
+                left: 'left',
+                data: ['Earnings']
+            },
+            tooltip: {},
+            xAxis: {
+                data: []
+            },
+            yAxis: {name: 'Value', minorSplitLine: {show: true}, type: 'log'},
+            series: [{
+                name: 'Earnings',
+                type: 'line',
+                data: [],
+                emphasis: {
+                    focus: 'series'
+                },
+                smooth: true
+            }]
+        }
+
+        option && chart.setOption(option)
+
+        this.handleEvent("data", (data) => {
+            var dates = []
+            var values = []
+
+            data.data.forEach((item) => {
+                dates.push(item[0])
+                values.push(item[1])
+            })
+
+            option.xAxis.data = dates.reverse()
+            option.series[0].data = values.reverse()
+
+            option && chart.setOption(option)
+        })
+    }
+}
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => NProgress.start())

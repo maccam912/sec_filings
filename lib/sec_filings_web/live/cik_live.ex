@@ -23,15 +23,27 @@ defmodule SecFilingsWeb.CikLive do
           order_by: [desc: :date]
       )
 
-    {:ok,
-     assign(socket,
-       params: params,
-       cik: Map.get(params, "cik"),
-       tables: companies,
-       earnings: earnings,
-       debug: "",
-       feedback: ""
-     )}
+    socket =
+      assign(socket,
+        params: params,
+        cik: Map.get(params, "cik"),
+        tables: companies,
+        earnings: earnings,
+        chart: get_chart(earnings),
+        debug: "",
+        feedback: ""
+      )
+
+    socket = socket |> push_event("data", %{data: get_chart(earnings)})
+    {:ok, socket}
+  end
+
+  def get_chart(earnings) do
+    data =
+      earnings
+      |> Enum.map(fn item -> [item.date, item.earnings] end)
+
+    data
   end
 
   @impl true

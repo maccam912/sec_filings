@@ -14,6 +14,7 @@
 </form>
 
 <h2><%= List.first(@tables).company_name %></h2>
+<div id="chart" phx-update="ignore" phx-hook="chart" style="width:100%; height:400px;"></div>
 <button phx-click="get_eps">Get EPS</button>
 <%= @debug %>
 <table>
