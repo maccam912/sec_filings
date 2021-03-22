@@ -32,6 +32,4 @@ defmodule SecFilings.Application do
     SecFilingsWeb.Endpoint.config_change(changed, removed)
     :ok
   end
-
-  :ok = :hackney_pool.start_pool(:first_pool, timeout: 60000, max_connections: 100)
 end
