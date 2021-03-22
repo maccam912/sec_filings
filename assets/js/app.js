@@ -17,57 +17,62 @@ import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
 import * as echarts from "echarts"
+import * as ecStat from "echarts-stat"
 
 let hooks = {}
 hooks.chart = {
     mounted() {
-        var chart = echarts.init(this.el);
+        echarts.registerTransform(ecStat.transform.regression);
+
+        var chart = echarts.init(this.el, null, {renderer: 'canvas'});
+
         // Draw the chart
         var option = {
+            title: {
+                text: 'Earnings per 3 month period per share',
+                left: 'center'
+            },
             legend: {
-                left: 'left',
-                data: ['Earnings']
+                left: 'left'
             },
-            tooltip: {},
+            tooltip: {
+                show: true,
+            },
             xAxis: {
-                data: []
+                type: 'time'
             },
-            yAxis: {name: 'Value', minorSplitLine: {show: true}, type: 'log'},
-            //yAxis: {name: 'Value', min: 0, max: 1, minorSplitLine: {show: true}},
+            yAxis: {
+                // type: 'log'
+            },
             series: [{
-                name: 'Earnings',
+                name: 'EPS',
                 type: 'line',
-                data: [],
-                emphasis: {
-                    focus: 'series'
-                },
-                smooth: true
+                datasetIndex: 0,
+            }],
+            dataset: [{
+                source: []
             }]
-        }
+        };
 
-        option && chart.setOption(option)
+        chart.setOption(option)
 
         this.handleEvent("data", (data) => {
-            var dates = []
-            var values = []
-
+            var source = []
             data.data.forEach((item) => {
-                dates.push(item[0])
-                values.push(item[1])
+                source.push([item[0], item[1]])
             })
 
-            option.xAxis.data = dates.reverse()
-            option.series[0].data = values.reverse()
+            var option = chart.getOption()
 
-            option.yAxis.max = Math.max(values)
+            option.dataset[0].source = source
 
-            option && chart.setOption(option, true)
+            chart.setOption(option)
         })
     }
 }
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks})
+let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: hooks})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => NProgress.start())
@@ -77,7 +82,7 @@ window.addEventListener("phx:page-loading-stop", info => NProgress.done())
 liveSocket.connect()
 
 // expose liveSocket on window for web console debug logs and latency simulation:
-// >> liveSocket.enableDebug()
+>> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket

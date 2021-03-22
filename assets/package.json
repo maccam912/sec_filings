@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "echarts": "^5.0.2",
+    "echarts-stat": "^1.2.0",
     "nprogress": "^0.2.0",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",

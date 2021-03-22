@@ -29,7 +29,6 @@ defmodule SecFilingsWeb.CikLive do
         cik: Map.get(params, "cik"),
         tables: companies,
         earnings: earnings,
-        chart: get_chart(earnings),
         debug: "",
         feedback: ""
       )
