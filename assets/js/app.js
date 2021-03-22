@@ -33,6 +33,7 @@ hooks.chart = {
                 data: []
             },
             yAxis: {name: 'Value', minorSplitLine: {show: true}, type: 'log'},
+            //yAxis: {name: 'Value', min: 0, max: 1, minorSplitLine: {show: true}},
             series: [{
                 name: 'Earnings',
                 type: 'line',
@@ -58,7 +59,9 @@ hooks.chart = {
             option.xAxis.data = dates.reverse()
             option.series[0].data = values.reverse()
 
-            option && chart.setOption(option)
+            option.yAxis.max = Math.max(values)
+
+            option && chart.setOption(option, true)
         })
     }
 }
