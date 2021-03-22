@@ -3,7 +3,8 @@ defmodule SecFilings.EdgarClient do
   NimbleCSV.define(IndexParser, separator: "|", escape: "\"")
 
   def get_index(url) do
-    {st, %HTTPoison.Response{body: body}} = HTTPoison.get(url, %{}, hackney: [:insecure])
+    {st, %HTTPoison.Response{body: body}} =
+      HTTPoison.get(url, %{}, hackney: [:insecure, pool: :first_pool])
 
     if st != :ok do
       [nil]
@@ -40,7 +41,9 @@ defmodule SecFilings.EdgarClient do
 
   def get_financial_statements(filename) do
     {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-      HTTPoison.get("https://www.sec.gov/Archives/#{filename}", %{}, hackney: [:insecure])
+      HTTPoison.get("https://www.sec.gov/Archives/#{filename}", %{},
+        hackney: [:insecure, pool: :first_pool]
+      )
 
     document = Floki.parse_document!(body)
 
@@ -83,7 +86,7 @@ defmodule SecFilings.EdgarClient do
     end)
     |> Flow.from_enumerable()
     |> Flow.map(fn url ->
-      HTTPoison.get(url)
+      HTTPoison.get(url, [], hackney: [pool: :first_pool])
     end)
     |> Flow.filter(fn {st, response} -> st == :ok and response.status_code == 200 end)
     |> Flow.map(fn {:ok, %HTTPoison.Response{body: body}} -> Floki.parse_document(body) end)

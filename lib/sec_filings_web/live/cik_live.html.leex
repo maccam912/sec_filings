@@ -12,8 +12,21 @@
 </tr>
 </table>
 </form>
+
 <h2><%= List.first(@tables).company_name %></h2>
+<button phx-click="get_eps">Get EPS</button>
 <%= @debug %>
+<table>
+<thead><tr><th>Date</th><th>Earnings</th></tr></thead>
+<tbody>
+<%= for earning <- @earnings do %>
+<tr>
+<td><%= earning.date %></td>
+<td><%= earning.earnings %></td>
+</tr>
+<% end %>
+</tbody>
+</table>
 <table>
 <tr><th>Form Type</th><th>Date Filed</th><th>Filename</th></tr>
 <%= for table <- @tables do %>

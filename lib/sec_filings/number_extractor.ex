@@ -1,6 +1,8 @@
 defmodule SecFilings.NumberExtractor do
   def get_doc(url) do
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
+    {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
+      HTTPoison.get(url, [], hackney: [pool: :first_pool])
+
     true = Cachex.put!(:filings_cache, url, body)
     body
   end
