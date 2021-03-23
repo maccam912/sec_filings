@@ -49,7 +49,7 @@ defmodule SecFilingsWeb.CikLive do
   @impl true
   def handle_event("get_tags", _params, socket) do
     cik = socket.assigns.cik
-    SecFilings.TagExtractor.load_cik(cik)
+    SecFilings.TagExtractorWorker.load_cik(cik)
     {:noreply, socket}
   end
 end

@@ -1,5 +1,6 @@
 defmodule SecFilings.TagExtractor do
   import Ecto.Query, warn: false
+  require Logger
 
   def gen_filename(cik, adsh) do
     "edgar/data/#{cik}/#{adsh}.txt"
@@ -47,7 +48,7 @@ defmodule SecFilings.TagExtractor do
       SecFilings.TagPairs.changeset(%SecFilings.TagPairs{}, m)
     end)
     |> Enum.map(fn changeset ->
-      SecFilings.Repo.insert(changeset)
+      Logger.warn(SecFilings.Repo.insert(changeset))
     end)
   end
 

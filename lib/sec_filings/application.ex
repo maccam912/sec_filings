@@ -16,6 +16,7 @@ defmodule SecFilings.Application do
       # Start the Endpoint (http/https)
       SecFilingsWeb.Endpoint,
       # Start a worker by calling: SecFilings.Worker.start_link(arg)
+      {SecFilings.TagExtractorWorker, []},
       # {SecFilings.Worker, arg}
       {Cachex, [name: :filings_cache, limit: 200]}
     ]
