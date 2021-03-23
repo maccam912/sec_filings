@@ -1,4 +1,4 @@
-defmodule SecFilings.SecFilings.Feedback do
+defmodule SecFilings.Feedback do
   use Ecto.Schema
   import Ecto.Changeset
 
