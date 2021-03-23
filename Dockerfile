@@ -7,7 +7,7 @@ ARG PORT=5000
 
 WORKDIR /opt/app
 
-RUN apk --no-cache add elixir npm
+RUN apk --no-cache add elixir npm bash
 
 ADD . .
 
