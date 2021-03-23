@@ -1,6 +1,5 @@
 defmodule SecFilings.TagExtractor do
   import Ecto.Query, warn: false
-  require Logger
 
   def gen_filename(cik, adsh) do
     "edgar/data/#{cik}/#{adsh}.txt"
@@ -13,6 +12,8 @@ defmodule SecFilings.TagExtractor do
   def get_tag_pairs(cik, adsh) do
     tags =
       get_tags(cik, adsh)
+      |> Enum.filter(fn item -> !is_nil(item) end)
+      |> Enum.filter(fn {_, item} -> !is_nil(item) end)
       |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
 
     periods = SecFilings.NumberExtractor.get_periods(gen_filename(cik, adsh))
@@ -43,13 +44,15 @@ defmodule SecFilings.TagExtractor do
 
   def insert_tags(cik, adsh) do
     get_tag_pairs(cik, adsh)
-    |> Enum.map(fn {k, %{"value" => v, "period" => %{"startDate" => sd, "endDate" => ed}}} ->
+    |> Flow.from_enumerable()
+    |> Flow.map(fn {k, %{"value" => v, "period" => %{"startDate" => sd, "endDate" => ed}}} ->
       m = %{cik: cik, tag: k, value: v, start_date: sd, end_date: ed}
       SecFilings.TagPairs.changeset(%SecFilings.TagPairs{}, m)
     end)
-    |> Enum.map(fn changeset ->
-      Logger.warn(SecFilings.Repo.insert(changeset))
+    |> Flow.map(fn changeset ->
+      IO.inspect(SecFilings.Repo.insert(changeset))
     end)
+    |> Flow.run()
   end
 
   def get_filenames_for_cik(cik) do

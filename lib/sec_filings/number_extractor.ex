@@ -94,18 +94,24 @@ defmodule SecFilings.NumberExtractor do
 
       attr_map = Map.put(attr_map, "content", content |> Enum.map(&to_string/1))
 
-      [value] = Map.get(attr_map, "content")
+      values = Map.get(attr_map, "content")
 
-      attr_map =
-        try do
-          {scaled_value, ""} = Float.parse(value)
+      if length(values) > 0 do
+        [value] = values
 
-          Map.put(attr_map, "value", scaled_value)
-        rescue
-          MatchError -> Map.put(attr_map, "value", value)
-        end
+        attr_map =
+          try do
+            {scaled_value, ""} = Float.parse(value)
 
-      {tag, attr_map}
+            Map.put(attr_map, "value", scaled_value)
+          rescue
+            MatchError -> Map.put(attr_map, "value", value)
+          end
+
+        {tag, attr_map}
+      else
+        nil
+      end
     catch
       _ -> nil
     end

@@ -29,11 +29,10 @@ defmodule SecFilings.TagExtractorWorker do
   @impl true
   def handle_cast({:insert, cik}, state) do
     SecFilings.TagExtractor.get_filenames_for_cik(cik)
-    |> SecFilings.TagExtractor.get_cik_adsh()
-    |> Stream.map(fn {cik, adsh} ->
+    |> Enum.map(fn filename -> SecFilings.TagExtractor.get_cik_adsh(filename) end)
+    |> Enum.map(fn {cik, adsh} ->
       insert(cik, adsh)
     end)
-    |> Stream.run()
 
     {:noreply, state}
   end
