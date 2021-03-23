@@ -1,4 +1,6 @@
 defmodule SecFilings.TagExtractor do
+  import Ecto.Query, warn: false
+
   def gen_filename(cik, adsh) do
     "edgar/data/#{cik}/#{adsh}.txt"
   end
@@ -23,18 +25,55 @@ defmodule SecFilings.TagExtractor do
 
     tag_pairs =
       tags
-      |> Enum.map(fn {k, v} -> {k, v} end)
       |> Enum.filter(fn {_, %{"period" => pd}} -> !is_nil(pd) end)
-      |> Enum.sort_by(
-        fn {_, %{"period" => pd}} ->
-          case pd do
-            %{"instant" => pd} -> Date.add(pd, -1)
-            %{"endDate" => pd} -> pd
-          end
-        end,
-        {:desc, Date}
-      )
+      |> Enum.map(fn {k, v} ->
+        {k,
+         case v do
+           %{"period" => %{"instant" => dt}} ->
+             Map.put(v, "period", %{"startDate" => dt, "endDate" => dt})
+
+           _ ->
+             v
+         end}
+      end)
 
     tag_pairs
+  end
+
+  def insert_tags(cik, adsh) do
+    get_tag_pairs(cik, adsh)
+    |> Enum.map(fn {k, %{"value" => v, "period" => %{"startDate" => sd, "endDate" => ed}}} ->
+      m = %{cik: cik, tag: k, value: v, start_date: sd, end_date: ed}
+      SecFilings.TagPairs.changeset(%SecFilings.TagPairs{}, m)
+    end)
+    |> Enum.map(fn changeset ->
+      SecFilings.Repo.insert(changeset)
+    end)
+  end
+
+  def get_filenames_for_cik(cik) do
+    SecFilings.Repo.all(
+      from c in SecFilings.Raw.Index,
+        where: c.form_type in ["10-K", "10-Q"] and c.cik == ^cik,
+        order_by: [desc: :date_filed, asc: :form_type],
+        select: c.filename
+    )
+  end
+
+  def load_cik(cik) do
+    get_filenames_for_cik(cik)
+    |> Flow.from_enumerable()
+    |> Flow.map(fn filename ->
+      get_cik_adsh(filename)
+    end)
+    |> Flow.map(fn {cik, adsh} ->
+      SecFilings.TagExtractor.insert_tags(cik, adsh)
+    end)
+    |> Enum.to_list()
+  end
+
+  def get_cik_adsh(filename) do
+    ["edgar", "data", cik, adsh, "txt"] = String.split(filename, ["/", "."])
+    {cik, adsh}
   end
 end

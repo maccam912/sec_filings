@@ -22,7 +22,7 @@ defmodule SecFilings.NumberExtractor do
       end
 
     scan_for_tags(body)
-    |> Enum.map(fn [doc] -> SecFilings.TagParser.parse(doc) end)
+    |> Enum.map(fn [doc] -> parse(doc) end)
   end
 
   def parse_node({name, attrs, body}) do
@@ -81,20 +81,33 @@ defmodule SecFilings.NumberExtractor do
     |> Enum.into(%{})
   end
 
-  def fixed_value_gaap_tags(tags) do
-    tags
-    |> Enum.reduce(%{}, fn {k, v}, acc ->
-      case v do
-        %{"fixed_value" => _} -> Map.put(acc, k, v)
-        _ -> acc
-      end
-    end)
-    |> Enum.reduce(%{}, fn {k, v}, acc ->
-      if String.contains?(k, "us-gaap") do
-        Map.put(acc, k, v)
-      else
-        acc
-      end
-    end)
+  def parse(doctext) do
+    try do
+      {:ok, element, _tail} = :erlsom.simple_form(doctext)
+      {tag, attributes, content} = element
+      tag = to_string(tag)
+
+      attr_map =
+        Enum.reduce(attributes, %{}, fn {key, value}, acc ->
+          Map.put(acc, to_string(key), to_string(value))
+        end)
+
+      attr_map = Map.put(attr_map, "content", content |> Enum.map(&to_string/1))
+
+      [value] = Map.get(attr_map, "content")
+
+      attr_map =
+        try do
+          {scaled_value, ""} = Float.parse(value)
+
+          Map.put(attr_map, "value", scaled_value)
+        rescue
+          MatchError -> Map.put(attr_map, "value", value)
+        end
+
+      {tag, attr_map}
+    catch
+      _ -> nil
+    end
   end
 end

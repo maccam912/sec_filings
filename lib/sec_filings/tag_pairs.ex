@@ -17,6 +17,8 @@ defmodule SecFilings.TagPairs do
     tag_pairs
     |> cast(attrs, [:cik, :tag, :value, :start_date, :end_date])
     |> validate_required([:cik, :tag, :value, :start_date, :end_date])
-    |> unique_constraint([:cik, :tag, :start_date, :end_date], name: :tag_pairs_cik_tag_start_date_end_date_index)
+    |> unique_constraint([:cik, :tag, :start_date, :end_date],
+      name: :tag_pairs_cik_tag_start_date_end_date_index
+    )
   end
 end
