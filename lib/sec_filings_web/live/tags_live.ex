@@ -8,33 +8,7 @@ defmodule SecFilingsWeb.TagsLive do
     adsh = Map.get(params, "adsh")
     cik = Map.get(params, "cik")
 
-    tags =
-      SecFilings.TagExtractor.get_tags(cik, adsh)
-      |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
-
-    periods =
-      SecFilings.NumberExtractor.get_periods(SecFilings.TagExtractor.gen_filename(cik, adsh))
-
-    tags =
-      tags
-      |> Enum.map(fn {k, v} ->
-        contextRef = Map.get(v, "contextRef")
-        {k, Map.put(v, "period", Map.get(periods, contextRef))}
-      end)
-
-    tag_pairs =
-      tags
-      |> Enum.map(fn {k, v} -> {k, v} end)
-      |> Enum.filter(fn {_, %{"period" => pd}} -> !is_nil(pd) end)
-      |> Enum.sort_by(
-        fn {_, %{"period" => pd}} ->
-          case pd do
-            %{"instant" => pd} -> Date.add(pd, -1)
-            %{"endDate" => pd} -> pd
-          end
-        end,
-        {:desc, Date}
-      )
+    tag_pairs = SecFilings.TagExtractor.get_tag_pairs(cik, adsh)
 
     {:ok,
      assign(socket,
@@ -47,14 +21,14 @@ defmodule SecFilingsWeb.TagsLive do
   end
 
   @impl true
-  def handle_event("search", %{"q" => query}, socket) do
-    {:noreply, assign(socket, query: query)}
+  def handle_event("feedback", %{"feedback" => feedback}, socket) do
+    fb = %SecFilings.Feedback{feedback: feedback}
+    SecFilings.Repo.insert(fb)
+    {:noreply, assign(socket, feedback: "Thanks!")}
   end
 
   @impl true
-  def handle_event("feedback", %{"feedback" => feedback}, socket) do
-    fb = %SecFilings.SecFilings.Feedback{feedback: feedback}
-    SecFilings.Repo.insert(fb)
-    {:noreply, assign(socket, feedback: "Thanks!")}
+  def handle_event("search", %{"q" => query}, socket) do
+    {:noreply, assign(socket, query: query)}
   end
 end

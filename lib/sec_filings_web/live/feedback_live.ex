@@ -3,7 +3,7 @@ defmodule SecFilingsWeb.FeedbackLive do
   import Ecto.Query, warn: false
 
   def feedback() do
-    SecFilings.Repo.all(from(f in SecFilings.SecFilings.Feedback))
+    SecFilings.Repo.all(from(f in SecFilings.Feedback))
   end
 
   @impl true
