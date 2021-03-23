@@ -64,8 +64,8 @@ defmodule SecFilings.TimeSeries do
     end)
   end
 
-  def check_for_earnings(tag_pairs, cik) do
-    get_tag_pairs_with_period_duration(tag_pairs, "EarningsPerShareDiluted")
+  def check_for_earnings(tag_pairs, cik, tag) do
+    get_tag_pairs_with_period_duration(tag_pairs, tag)
     |> Enum.map(fn {_, %{"period" => %{"startDate" => s, "endDate" => e}, "value" => v}} ->
       d = Date.diff(e, s)
       {cik, ""} = Integer.parse(cik)
@@ -81,6 +81,13 @@ defmodule SecFilings.TimeSeries do
       SecFilings.Repo.insert(changeset)
       {v, e}
     end)
+    |> Enum.uniq()
+  end
+
+  def check_for_earnings(tag_pairs, cik) do
+    ["EarningsPerShareDiluted", "EarningsPerShareBasicAndDiluted", "EarningsPerShareBasic"]
+    # This is Enum on purpose! I want it to add in the order above, filling in gaps as it can
+    |> Enum.flat_map(fn tag -> check_for_earnings(tag_pairs, cik, tag) end)
     |> Enum.uniq()
   end
 
