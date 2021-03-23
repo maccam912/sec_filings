@@ -22,7 +22,7 @@ RUN mix phx.digest
 
 EXPOSE 80
 
-CMD ["mix", "phx.server"]
+CMD ["mix", "ecto.migrate", "&&", "mix", "phx.server"]
 
 #FROM alpine:latest AS deploy
 
