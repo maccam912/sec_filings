@@ -31,8 +31,11 @@ defmodule SecFilingsWeb.CikLive do
           }
       )
       |> Enum.map(fn item ->
-        Map.put(item, :total_earnings, item.earnings * item.shares_outstanding)
+        if !is_nil(item.earnings) and !is_nil(item.shares_outstanding) do
+          Map.put(item, :total_earnings, item.earnings * item.shares_outstanding)
+        end
       end)
+      |> Enum.filter(fn item -> !is_nil(item) end)
 
     socket =
       assign(socket,
