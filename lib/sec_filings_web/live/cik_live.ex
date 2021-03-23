@@ -19,7 +19,7 @@ defmodule SecFilingsWeb.CikLive do
     earnings_and_shares =
       SecFilings.Repo.all(
         from e in SecFilings.Earnings,
-          join: s in SecFilings.SharesOutstanding,
+          left_join: s in SecFilings.SharesOutstanding,
           on: e.cik == s.cik and e.date == s.date,
           where: e.cik == ^Map.get(params, "cik"),
           order_by: [desc: :date],
