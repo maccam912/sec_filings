@@ -17,7 +17,7 @@ defmodule SecFilings.Application do
       SecFilingsWeb.Endpoint,
       # Start a worker by calling: SecFilings.Worker.start_link(arg)
       # {SecFilings.Worker, arg}
-      {Cachex, [name: :filings_cache, limit: 2000]}
+      {Cachex, [name: :filings_cache, limit: 200]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
