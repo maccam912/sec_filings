@@ -17,7 +17,7 @@ defmodule SecFilingsWeb.CikLive do
       )
 
     earnings_and_shares =
-      SecFilings.Repo.all(
+      IO.inspect SecFilings.Repo.all(
         from e in SecFilings.Earnings,
           left_join: s in SecFilings.SharesOutstanding,
           on: e.cik == s.cik and e.date == s.date,
@@ -78,16 +78,17 @@ defmodule SecFilingsWeb.CikLive do
           select: c.filename
       )
 
-    filenames
-    |> Flow.from_enumerable()
-    |> Flow.map(fn filename ->
-      {filename, get_eps_step1(filename)}
-    end)
-    |> Flow.map(fn {filename, tags} ->
-      get_eps_step2(filename, tags)
-    end)
-    |> Enum.to_list()
-
+    Task.async(fn ->
+      filenames
+      |> Flow.from_enumerable()
+      |> Flow.map(fn filename ->
+        {filename, get_eps_step1(filename)}
+      end)
+      |> Flow.map(fn {filename, tags} ->
+        get_eps_step2(filename, tags)
+      end)
+      |> Enum.to_list()
+    end )
     {:noreply, socket}
   end
 
@@ -96,7 +97,7 @@ defmodule SecFilingsWeb.CikLive do
     [_, _, cik, adsh, _] = String.split(filename, ["/", "."])
 
     tags =
-      SecFilings.TimeSeries.get_tags(cik, adsh)
+      SecFilings.TagExtractor.get_tags(cik, adsh)
       |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
 
     tags
@@ -107,7 +108,7 @@ defmodule SecFilingsWeb.CikLive do
     [_, _, cik, adsh, _] = String.split(filename, ["/", "."])
 
     periods =
-      SecFilings.NumberExtractor.get_periods(SecFilings.TimeSeries.gen_filename(cik, adsh))
+      SecFilings.NumberExtractor.get_periods(SecFilings.TagExtractor.gen_filename(cik, adsh))
 
     tags =
       tags

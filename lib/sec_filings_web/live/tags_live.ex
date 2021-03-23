@@ -9,11 +9,11 @@ defmodule SecFilingsWeb.TagsLive do
     cik = Map.get(params, "cik")
 
     tags =
-      SecFilings.TimeSeries.get_tags(cik, adsh)
+      SecFilings.TagExtractor.get_tags(cik, adsh)
       |> Enum.filter(fn {_, %{"value" => v}} -> is_number(v) end)
 
     periods =
-      SecFilings.NumberExtractor.get_periods(SecFilings.TimeSeries.gen_filename(cik, adsh))
+      SecFilings.NumberExtractor.get_periods(SecFilings.TagExtractor.gen_filename(cik, adsh))
 
     tags =
       tags
