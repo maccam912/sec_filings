@@ -58,7 +58,7 @@ hooks.chart = {
             option.dataset = []
 
             for (var i = 0; i < tags.length; i++) {
-                option.series.push({name: tags[i], type: 'line', datasetIndex: i})
+                option.series.push({name: tags[i], type: 'line', datasetIndex: i, smooth: true})
                 option.dataset.push({source: []})
             }
 
