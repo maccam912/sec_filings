@@ -16,6 +16,26 @@ defmodule SecFilingsWeb.CikLive do
           order_by: [desc: :date_filed, asc: :form_type]
       )
 
+    tags =
+      SecFilings.Repo.all(
+        from t in SecFilings.TagPairs,
+          where: t.cik == ^Map.get(params, "cik"),
+          order_by: [desc: :end_date]
+      )
+
+    earnings =
+      IO.inspect(
+        tags
+        |> Enum.filter(fn item ->
+          item.tag == "NetIncomeLoss"
+        end)
+        |> Enum.filter(fn item ->
+          d = Date.diff(item.end_date, item.start_date)
+          80 < d && d < 100
+        end)
+        |> Enum.map(fn item -> %{date: item.end_date, earnings: item.value} end)
+      )
+
     socket =
       assign(socket,
         params: params,
@@ -25,7 +45,7 @@ defmodule SecFilingsWeb.CikLive do
         feedback: ""
       )
 
-    socket = socket |> push_event("data", %{data: []})
+    socket = socket |> push_event("data", %{data: earnings})
     {:ok, socket}
   end
 
