@@ -38,7 +38,8 @@ hooks.chart = {
                 show: true,
             },
             xAxis: {
-                type: 'time'
+                type: 'time',
+                boundaryGap: false,
             },
             yAxis: {
                 //type: 'log'
@@ -57,7 +58,7 @@ hooks.chart = {
             option.dataset = []
 
             for (var i = 0; i < tags.length; i++) {
-                option.series.push({name: tags[i], type: 'scatter', datasetIndex: i})
+                option.series.push({name: tags[i], type: 'line', datasetIndex: i})
                 option.dataset.push({source: []})
             }
 

@@ -50,7 +50,7 @@ defmodule SecFilings.TagExtractor do
       SecFilings.TagPairs.changeset(%SecFilings.TagPairs{}, m)
     end)
     |> Flow.map(fn changeset ->
-      IO.inspect(SecFilings.Repo.insert(changeset))
+      SecFilings.Repo.insert(changeset)
     end)
     |> Flow.run()
   end
@@ -66,11 +66,11 @@ defmodule SecFilings.TagExtractor do
 
   def load_cik(cik) do
     get_filenames_for_cik(cik)
-    |> Flow.from_enumerable()
-    |> Flow.map(fn filename ->
+    |> Stream.from_enumerable()
+    |> Stream.map(fn filename ->
       get_cik_adsh(filename)
     end)
-    |> Flow.map(fn {cik, adsh} ->
+    |> Stream.map(fn {cik, adsh} ->
       SecFilings.TagExtractor.insert_tags(cik, adsh)
     end)
     |> Enum.to_list()

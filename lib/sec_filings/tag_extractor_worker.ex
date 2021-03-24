@@ -22,18 +22,23 @@ defmodule SecFilings.TagExtractorWorker do
 
   @impl true
   def handle_cast({:insert, {cik, adsh}}, state) do
+    IO.puts("Starting CIK #{cik}")
     SecFilings.TagExtractor.insert_tags(cik, adsh)
+    IO.puts("Done with CIK #{cik}")
     {:noreply, state}
   end
 
   @impl true
   def handle_cast({:insert, cik}, state) do
+    IO.puts("Starting CIK #{cik}")
+
     SecFilings.TagExtractor.get_filenames_for_cik(cik)
     |> Enum.map(fn filename -> SecFilings.TagExtractor.get_cik_adsh(filename) end)
     |> Enum.map(fn {cik, adsh} ->
       insert(cik, adsh)
     end)
 
+    IO.puts("Done with CIK #{cik}")
     {:noreply, state}
   end
 end

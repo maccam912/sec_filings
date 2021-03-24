@@ -15,6 +15,32 @@ defmodule SecFilingsWeb.CikLive do
     List.first(String.split(adsh_txt, ["."]))
   end
 
+  def get_latest_data(cik) do
+    tags =
+      SecFilings.Repo.all(
+        from t in SecFilings.TagPairs,
+          where: t.cik == ^cik and t.tag in ^Map.keys(@tags),
+          order_by: [desc: :end_date]
+      )
+
+    tags
+    |> Enum.filter(fn item ->
+      item.tag in Map.keys(@tags)
+    end)
+    |> Enum.map(fn item ->
+      d = Date.diff(item.end_date, item.start_date)
+
+      case d do
+        0 -> {item.end_date, item.tag, item.value}
+        x -> {item.end_date, item.tag, item.value / d}
+      end
+    end)
+    |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
+      fixed_tag = @tags[tag]
+      Map.update(acc, date, %{fixed_tag => value}, fn old -> Map.put(old, fixed_tag, value) end)
+    end)
+  end
+
   @impl true
   def mount(params, _session, socket) do
     filings =
@@ -24,46 +50,35 @@ defmodule SecFilingsWeb.CikLive do
           order_by: [desc: :date_filed, asc: :form_type]
       )
 
-    tags =
-      SecFilings.Repo.all(
-        from t in SecFilings.TagPairs,
-          where: t.cik == ^Map.get(params, "cik") and t.tag in ^Map.keys(@tags),
-          order_by: [desc: :end_date]
-      )
-
-    data =
-      tags
-      |> Enum.filter(fn item ->
-        item.tag in Map.keys(@tags)
-      end)
-      |> Enum.filter(fn item ->
-        d = Date.diff(item.end_date, item.start_date)
-        (80 < d && d < 100) || d == 0
-      end)
-      |> Enum.map(fn item -> {item.end_date, item.tag, item.value} end)
-      |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
-        fixed_tag = @tags[tag]
-        Map.update(acc, date, %{fixed_tag => value}, fn old -> Map.put(old, fixed_tag, value) end)
-      end)
-
-    # |> Enum.map(fn {k, v} ->
-    #   v
-    #   Enum.reduce(%{date: k}, fn {tag, value}, acc ->
-    #     Map.put(acc, tag, value)
-    #   end)
-    # end)
-
     socket =
       assign(socket,
         params: params,
         cik: Map.get(params, "cik"),
         tables: filings,
         debug: "",
-        feedback: ""
+        feedback: "",
+        data: %{}
       )
 
-    socket = socket |> push_event("data", %{data: data})
+    send(self(), "refresh_chart")
     {:ok, socket}
+  end
+
+  def handle_info("refresh_chart", socket) do
+    cik = socket.assigns.cik
+    latest_data = get_latest_data(cik)
+
+    socket =
+      if latest_data != socket.assigns.data do
+        socket = assign(socket, data: latest_data)
+        socket = socket |> push_event("data", %{data: latest_data})
+        socket
+      else
+        socket
+      end
+
+    Process.send_after(self(), "refresh_chart", 3000)
+    {:noreply, socket}
   end
 
   def get_chart(earnings) do
