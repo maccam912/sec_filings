@@ -7,8 +7,11 @@ defmodule SecFilingsWeb.CikLive do
     "CommonStockSharesOutstanding" => "Shares Outstanding",
     "Revenues" => "Sales",
     "RevenueFromContractWithCustomerExcludingAssessedTax" => "Sales",
+    "SalesRevenueNet" => "Sales",
     "NetCashProvidedByUsedInOperatingActivities" => "Operating Cash Flow",
-    "NetCashProvidedByUsedInInvestingActivities" => "CapEx"
+    "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations" => "Operating Cash Flow",
+    "NetCashProvidedByUsedInInvestingActivities" => "CapEx",
+    "NetCashProvidedByUsedInInvestingActivitiesContinuingOperations" => "CapEx"
   }
 
   def get_adsh(filename) do
@@ -24,45 +27,78 @@ defmodule SecFilingsWeb.CikLive do
           order_by: [desc: :end_date]
       )
 
-    tags
-    |> Enum.filter(fn item ->
-      item.tag in Map.keys(@tags)
-    end)
-    |> Enum.map(fn item ->
-      d = Date.diff(item.end_date, item.start_date)
+    existing_tags =
+      tags
+      |> Enum.filter(fn item ->
+        item.tag in Map.keys(@tags)
+      end)
+      |> Enum.map(fn item ->
+        d = Date.diff(item.end_date, item.start_date)
 
-      v =
-        if item.tag in ["InterestExpense"] do
-          -1 * item.value
-        else
-          item.value
+        v =
+          if item.tag in ["InterestExpense"] do
+            -1 * item.value
+          else
+            item.value
+          end
+
+        case d do
+          0 -> {item.end_date, item.tag, v}
+          _ -> {item.end_date, item.tag, v / d}
         end
+      end)
+      |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
+        Map.update(acc, date, %{tag => value}, fn old -> Map.put(old, tag, value) end)
+      end)
+      |> Enum.reduce(%{}, fn {date, map}, acc ->
+        map =
+          Enum.reduce(%{}, map, fn {k, v}, acc ->
+            map = Map.put(acc, k, v)
 
-      case d do
-        0 -> {item.end_date, item.tag, v}
-        _ -> {item.end_date, item.tag, v / d}
-      end
+            map =
+              if k in Map.keys(@tags) do
+                Map.put(map, @tags[k], v)
+              else
+                map
+              end
+
+            map
+          end)
+
+        Map.put(acc, date, map)
+      end)
+
+    existing_tags
+    |> Enum.map(fn {k, v} ->
+      {k, fix_tags(v)}
     end)
-    |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
-      Map.update(acc, date, %{tag => value}, fn old -> Map.put(old, tag, value) end)
+    |> Enum.reduce(%{}, fn {k, v}, acc ->
+      Map.put(acc, k, v)
     end)
-    |> Enum.reduce(%{}, fn {date, map}, acc ->
-      map =
-        Enum.reduce(%{}, map, fn {k, v}, acc ->
-          map = Map.put(acc, k, v)
+  end
 
-          map =
-            if k in Map.keys(@tags) do
-              Map.put(map, @tags[k], v)
-            else
-              map
-            end
+  def fix_tags(v) do
+    new_v =
+      v
+      |> Enum.flat_map(fn {k, v} ->
+        if k in Map.keys(@tags) do
+          [{k, v}, {@tags[k], v}]
+        else
+          [{k, v}]
+        end
+      end)
 
-          map
-        end)
+    new_map =
+      Enum.reduce(new_v, %{}, fn {k, v}, acc ->
+        Map.put(acc, k, v)
+      end)
 
-      Map.put(acc, date, map)
-    end)
+    if "Operating Cash Flow" in Map.keys(new_map) and "CapEx" in Map.keys(new_map) do
+      fcf = Map.get(new_map, "Operating Cash Flow") + Map.get(new_map, "CapEx")
+      Map.put(new_map, "Free Cash Flow", fcf)
+    else
+      new_map
+    end
   end
 
   @impl true
@@ -88,6 +124,7 @@ defmodule SecFilingsWeb.CikLive do
     {:ok, socket}
   end
 
+  @impl true
   def handle_info("refresh_chart", socket) do
     cik = socket.assigns.cik
     latest_data = get_latest_data(cik)
