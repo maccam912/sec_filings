@@ -31,6 +31,9 @@ hooks.chart = {
             legend: {
                 left: 'left'
             },
+            grid: {
+                containLabel: true
+            },
             tooltip: {
                 show: true,
             },
@@ -40,27 +43,34 @@ hooks.chart = {
             yAxis: {
                 //type: 'log'
             },
-            series: [{
-                name: 'Earnings',
-                type: 'line',
-                datasetIndex: 0,
-            }],
-            dataset: [{
-                source: []
-            }]
+            series: [],
+            dataset: []
         };
 
         chart.setOption(option)
 
         this.handleEvent("data", (data) => {
-            var earnings = []
-            data.data.forEach((item) => {
-                earnings.push([item.date, item.earnings])
-            })
+            const tags = ["Earnings", "Sales", "Operating Cash Flow", "Shares Outstanding"]
 
             var option = chart.getOption()
+            option.series = []
+            option.dataset = []
 
-            option.dataset[0].source = earnings
+            for (var i = 0; i < tags.length; i++) {
+                option.series.push({name: tags[i], type: 'scatter', datasetIndex: i})
+                option.dataset.push({source: []})
+            }
+
+            for (const key in data.data) {
+                for (var i = 0; i < tags.length; i++) {
+                    const tag = tags[i]
+                    option.dataset[i].source.push([key, data.data[key][tag]])
+                }
+            }
+
+            for (var i = 0; i < option.dataset.length; i++) {
+                option.dataset[i].source = option.dataset[i].source.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]))
+            }
 
             chart.setOption(option)
         })

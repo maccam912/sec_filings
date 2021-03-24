@@ -2,6 +2,14 @@ defmodule SecFilingsWeb.CikLive do
   use SecFilingsWeb, :live_view
   import Ecto.Query, warn: false
 
+  @tags %{
+    "NetIncomeLoss" => "Earnings",
+    "CommonStockSharesOutstanding" => "Shares Outstanding",
+    "Revenues" => "Sales",
+    "RevenueFromContractWithCustomerExcludingAssessedTax" => "Sales",
+    "NetCashProvidedByUsedInOperatingActivities" => "Operating Cash Flow"
+  }
+
   def get_adsh(filename) do
     adsh_txt = List.last(String.split(filename, ["/"]))
     List.first(String.split(adsh_txt, ["."]))
@@ -19,22 +27,31 @@ defmodule SecFilingsWeb.CikLive do
     tags =
       SecFilings.Repo.all(
         from t in SecFilings.TagPairs,
-          where: t.cik == ^Map.get(params, "cik"),
+          where: t.cik == ^Map.get(params, "cik") and t.tag in ^Map.keys(@tags),
           order_by: [desc: :end_date]
       )
 
-    earnings =
-      IO.inspect(
-        tags
-        |> Enum.filter(fn item ->
-          item.tag == "NetIncomeLoss"
-        end)
-        |> Enum.filter(fn item ->
-          d = Date.diff(item.end_date, item.start_date)
-          80 < d && d < 100
-        end)
-        |> Enum.map(fn item -> %{date: item.end_date, earnings: item.value} end)
-      )
+    data =
+      tags
+      |> Enum.filter(fn item ->
+        item.tag in Map.keys(@tags)
+      end)
+      |> Enum.filter(fn item ->
+        d = Date.diff(item.end_date, item.start_date)
+        (80 < d && d < 100) || d == 0
+      end)
+      |> Enum.map(fn item -> {item.end_date, item.tag, item.value} end)
+      |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
+        fixed_tag = @tags[tag]
+        Map.update(acc, date, %{fixed_tag => value}, fn old -> Map.put(old, fixed_tag, value) end)
+      end)
+
+    # |> Enum.map(fn {k, v} ->
+    #   v
+    #   Enum.reduce(%{date: k}, fn {tag, value}, acc ->
+    #     Map.put(acc, tag, value)
+    #   end)
+    # end)
 
     socket =
       assign(socket,
@@ -45,7 +62,7 @@ defmodule SecFilingsWeb.CikLive do
         feedback: ""
       )
 
-    socket = socket |> push_event("data", %{data: earnings})
+    socket = socket |> push_event("data", %{data: data})
     {:ok, socket}
   end
 
