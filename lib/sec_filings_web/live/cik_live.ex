@@ -7,7 +7,8 @@ defmodule SecFilingsWeb.CikLive do
     "CommonStockSharesOutstanding" => "Shares Outstanding",
     "Revenues" => "Sales",
     "RevenueFromContractWithCustomerExcludingAssessedTax" => "Sales",
-    "NetCashProvidedByUsedInOperatingActivities" => "Operating Cash Flow"
+    "NetCashProvidedByUsedInOperatingActivities" => "Operating Cash Flow",
+    "NetCashProvidedByUsedInInvestingActivities" => "CapEx"
   }
 
   def get_adsh(filename) do
@@ -30,14 +31,37 @@ defmodule SecFilingsWeb.CikLive do
     |> Enum.map(fn item ->
       d = Date.diff(item.end_date, item.start_date)
 
+      v =
+        if item.tag in ["InterestExpense"] do
+          -1 * item.value
+        else
+          item.value
+        end
+
       case d do
-        0 -> {item.end_date, item.tag, item.value}
-        x -> {item.end_date, item.tag, item.value / d}
+        0 -> {item.end_date, item.tag, v}
+        _ -> {item.end_date, item.tag, v / d}
       end
     end)
     |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
-      fixed_tag = @tags[tag]
-      Map.update(acc, date, %{fixed_tag => value}, fn old -> Map.put(old, fixed_tag, value) end)
+      Map.update(acc, date, %{tag => value}, fn old -> Map.put(old, tag, value) end)
+    end)
+    |> Enum.reduce(%{}, fn {date, map}, acc ->
+      map =
+        Enum.reduce(%{}, map, fn {k, v}, acc ->
+          map = Map.put(acc, k, v)
+
+          map =
+            if k in Map.keys(@tags) do
+              Map.put(map, @tags[k], v)
+            else
+              map
+            end
+
+          map
+        end)
+
+      Map.put(acc, date, map)
     end)
   end
 
