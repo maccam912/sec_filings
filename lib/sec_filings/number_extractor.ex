@@ -56,6 +56,8 @@ defmodule SecFilings.NumberExtractor do
         Cachex.get!(:filings_cache, url) || get_doc(url)
       end
 
+    IO.inspect(body)
+
     Regex.scan(~r/<context[^>]*>.*?<\/context>/s, body)
     |> Enum.map(fn [doc] -> :erlsom.simple_form(doc) end)
     |> Enum.map(fn {:ok, context_body, _tail} -> parse_node(context_body) end)

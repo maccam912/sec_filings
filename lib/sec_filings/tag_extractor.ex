@@ -66,7 +66,6 @@ defmodule SecFilings.TagExtractor do
 
   def load_cik(cik) do
     get_filenames_for_cik(cik)
-    |> Stream.from_enumerable()
     |> Stream.map(fn filename ->
       get_cik_adsh(filename)
     end)
