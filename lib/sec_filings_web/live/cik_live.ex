@@ -48,16 +48,16 @@ defmodule SecFilingsWeb.CikLive do
         end
       end)
       |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
-        Map.update(acc, date, %{tag => value}, fn old -> Map.put(old, tag, value) end)
+        Map.update(acc, date, %{tag => value}, fn old -> Map.put_new(old, tag, value) end)
       end)
       |> Enum.reduce(%{}, fn {date, map}, acc ->
         map =
           Enum.reduce(%{}, map, fn {k, v}, acc ->
-            map = Map.put(acc, k, v)
+            map = Map.put_new(acc, k, v)
 
             map =
               if k in Map.keys(@tags) do
-                Map.put(map, @tags[k], v)
+                Map.put_new(map, @tags[k], v)
               else
                 map
               end
@@ -65,7 +65,7 @@ defmodule SecFilingsWeb.CikLive do
             map
           end)
 
-        Map.put(acc, date, map)
+        Map.put_new(acc, date, map)
       end)
 
     existing_tags
@@ -73,7 +73,7 @@ defmodule SecFilingsWeb.CikLive do
       {k, fix_tags(v)}
     end)
     |> Enum.reduce(%{}, fn {k, v}, acc ->
-      Map.put(acc, k, v)
+      Map.put_new(acc, k, v)
     end)
   end
 
@@ -90,12 +90,12 @@ defmodule SecFilingsWeb.CikLive do
 
     new_map =
       Enum.reduce(new_v, %{}, fn {k, v}, acc ->
-        Map.put(acc, k, v)
+        Map.put_new(acc, k, v)
       end)
 
     if "Operating Cash Flow" in Map.keys(new_map) and "CapEx" in Map.keys(new_map) do
       fcf = Map.get(new_map, "Operating Cash Flow") + Map.get(new_map, "CapEx")
-      Map.put(new_map, "Free Cash Flow", fcf)
+      Map.put_new(new_map, "Free Cash Flow", fcf)
     else
       new_map
     end
