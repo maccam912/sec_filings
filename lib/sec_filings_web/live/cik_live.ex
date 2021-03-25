@@ -8,6 +8,7 @@ defmodule SecFilingsWeb.CikLive do
     "Revenues" => "Sales",
     "RevenueFromContractWithCustomerExcludingAssessedTax" => "Sales",
     "SalesRevenueNet" => "Sales",
+    "SalesRevenueGoodsNet" => "Sales",
     "NetCashProvidedByUsedInOperatingActivities" => "Operating Cash Flow",
     "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations" => "Operating Cash Flow",
     "NetCashProvidedByUsedInInvestingActivities" => "CapEx",
