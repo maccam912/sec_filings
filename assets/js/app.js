@@ -31,11 +31,48 @@ hooks.chart = {
             legend: {
                 left: 'left'
             },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                },
+                position: function (pos, params, el, elRect, size) {
+                    var obj = {top: 10};
+                    obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+                    return obj;
+                }
+            },
+            axisPointer: {
+                link: {xAxisIndex: 'all'}
+            },
+            toolbox: {
+                feature: {
+                    dataZoom: {
+                        yAxisIndex: false
+                    },
+                    brush: {
+                        type: ['lineX', 'clear']
+                    }
+                }
+            },
+            dataZoom: [
+                {
+                    type: 'inside',
+                    start: 0,
+                    end: 100,
+                    minValueSpan: 10
+                },
+                {
+                    show: true,
+                    type: 'slider',
+                    bottom: 60,
+                    start: 98,
+                    end: 100,
+                    minValueSpan: 10
+                }
+            ],
             grid: {
                 containLabel: true
-            },
-            tooltip: {
-                show: true,
             },
             xAxis: {
                 type: 'time',
