@@ -43,9 +43,10 @@ defmodule SecFilingsWeb.CikLive do
             item.value
           end
 
-        case d do
-          0 -> {item.end_date, item.tag, v}
-          _ -> {item.end_date, item.tag, v / d}
+        cond do
+          d == 0 -> {item.end_date, item.tag, v}
+          d < 100 -> {item.end_date, item.tag, v}
+          d >= 100 -> {item.end_date, item.tag, v / 4}
         end
       end)
       |> Enum.reduce(%{}, fn {date, tag, value}, acc ->
@@ -117,7 +118,6 @@ defmodule SecFilingsWeb.CikLive do
         cik: Map.get(params, "cik"),
         tables: filings,
         debug: "",
-        feedback: "",
         data: %{}
       )
 
@@ -151,13 +151,6 @@ defmodule SecFilingsWeb.CikLive do
       end)
 
     data
-  end
-
-  @impl true
-  def handle_event("feedback", %{"feedback" => feedback}, socket) do
-    fb = %SecFilings.Feedback{feedback: feedback}
-    SecFilings.Repo.insert(fb)
-    {:noreply, assign(socket, feedback: "Thanks!")}
   end
 
   @impl true

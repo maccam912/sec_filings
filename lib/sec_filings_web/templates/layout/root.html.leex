@@ -8,9 +8,6 @@
     <%= live_title_tag assigns[:page_title] || "SecFilings" %>
     <link phx-track-static rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <script defer phx-track-static type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
-    <%= if !function_exported?(Routes, :live_dashboard_path, 2) do %>
-      <script async defer data-domain="secfilings.dokku.koski.co" src="https://plausible.koski.co/js/plausible.js"></script>
-    <% end %>
   </head>
   <body>
     <header>

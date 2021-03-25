@@ -12,7 +12,7 @@ defmodule SecFilingsWeb.PageLive do
           limit: 300
       )
 
-    {:ok, assign(socket, tables: companies, query: "", feedback: "")}
+    {:ok, assign(socket, tables: companies, query: "")}
   end
 
   @impl true
@@ -26,12 +26,5 @@ defmodule SecFilingsWeb.PageLive do
       )
 
     {:noreply, assign(socket, tables: companies, query: query)}
-  end
-
-  @impl true
-  def handle_event("feedback", %{"feedback" => feedback}, socket) do
-    fb = %SecFilings.Feedback{feedback: feedback}
-    SecFilings.Repo.insert(fb)
-    {:noreply, assign(socket, feedback: "Thanks!")}
   end
 end

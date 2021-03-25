@@ -24,7 +24,7 @@ hooks.chart = {
     mounted() {
         echarts.registerTransform(ecStat.transform.regression);
 
-        var chart = echarts.init(this.el, null, {renderer: 'svg'});
+        var chart = echarts.init(this.el, null, {renderer: 'canvas'});
 
         // Draw the chart
         var option = {

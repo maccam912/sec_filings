@@ -1,21 +1,6 @@
-<form phx-submit="feedback">
-<table>
-    <colgroup>
-        <col span="1" style="width:15%"/>
-        <col span="1" style="width:70%"/>
-        <col span="1" style="width:15%"/>
-    </colgroup>
-<tr>
-    <td><label for="feedback">Feedback</label></td>
-    <td><input type="text" name="feedback" phx-debounce="150" value="<%= @feedback %>" placeholder="Send Feedback" autocomplete="off"/></td>
-    <td><input type="submit"/></td>
-</tr>
-</table>
-</form>
-
 <h2><%= List.first(@tables).company_name %></h2>
 
-<div id="chart" phx-update="ignore" phx-hook="chart" style="width:100%; height:400px;"></div>
+<div id="chart" phx-update="ignore" phx-hook="chart" style="width:100%; height: 600px;"></div>
 
 <button phx-click="get_tags">Get Tags</button>
 <table>
