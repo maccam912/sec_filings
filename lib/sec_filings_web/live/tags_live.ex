@@ -8,11 +8,31 @@ defmodule SecFilingsWeb.TagsLive do
     adsh = Map.get(params, "adsh")
     cik = Map.get(params, "cik")
 
-    tag_pairs = SecFilings.TagExtractor.get_tag_pairs(cik, adsh)
+    filename = SecFilings.Util.generate_filename(cik, adsh)
+
+    index_id =
+      SecFilings.Repo.one(
+        from i in SecFilings.Raw.Index, where: i.filename == ^filename, select: i.id
+      )
+
+    tags =
+      SecFilings.Repo.all(
+        from c in SecFilings.Context, where: c.index_id == ^index_id, preload: [:tags]
+      )
+      |> Enum.flat_map(fn context ->
+        context.tags
+        |> Enum.map(fn tag ->
+          {tag, context.start_date, context.end_date}
+        end)
+      end)
+      |> Enum.map(fn {tag, sd, ed} ->
+        v = %{"value" => tag.value, "period" => %{start_date: sd, end_date: ed}}
+        {tag.tag, v}
+      end)
 
     {:ok,
      assign(socket,
-       tags: tag_pairs,
+       tags: tags,
        adsh: adsh,
        cik: cik,
        query: ""

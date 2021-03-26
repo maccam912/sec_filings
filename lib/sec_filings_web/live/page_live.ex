@@ -7,8 +7,10 @@ defmodule SecFilingsWeb.PageLive do
     companies =
       SecFilings.Repo.all(
         from c in SecFilings.Raw.Index,
-          where: c.form_type in ["10-K", "10-Q"],
+          left_join: parsed_documents in assoc(c, :parsed_documents),
+          where: c.form_type in ["10-K", "10-Q"] and not is_nil(parsed_documents),
           order_by: [desc: :date_filed, asc: :company_name],
+          preload: [:parsed_documents],
           limit: 300
       )
 

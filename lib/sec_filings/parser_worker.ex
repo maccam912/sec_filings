@@ -45,7 +45,7 @@ defmodule SecFilings.ParserWorker do
       context = item[tag][:context]
       value = item[tag][:value]
 
-      contexts_id =
+      context_id =
         Repo.one(
           from c in SecFilings.Context,
             where: c.context_id == ^context and c.index_id == ^index_id,
@@ -55,7 +55,7 @@ defmodule SecFilings.ParserWorker do
       SecFilings.Tag.changeset(%SecFilings.Tag{}, %{
         tag: tag,
         value: value,
-        contexts_id: contexts_id
+        context_id: context_id
       })
     end)
     |> Stream.map(fn changeset ->

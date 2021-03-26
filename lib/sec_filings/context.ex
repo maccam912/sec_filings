@@ -7,6 +7,7 @@ defmodule SecFilings.Context do
     field :end_date, :date
     field :start_date, :date
     belongs_to :index, SecFilings.Raw.Index
+    has_many :tags, SecFilings.Tag
 
     timestamps()
   end

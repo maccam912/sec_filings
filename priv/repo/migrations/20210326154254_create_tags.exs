@@ -5,12 +5,12 @@ defmodule SecFilings.Repo.Migrations.CreateTags do
     create table(:tags) do
       add :tag, :string, null: false
       add :value, :float, null: false
-      add :contexts_id, references(:contexts, on_delete: :nothing), null: false
+      add :context_id, references(:contexts, on_delete: :nothing), null: false
 
       timestamps()
     end
 
-    create index(:tags, :contexts_id)
-    create unique_index(:tags, [:tag, :contexts_id])
+    create index(:tags, :context_id)
+    create unique_index(:tags, [:tag, :context_id])
   end
 end

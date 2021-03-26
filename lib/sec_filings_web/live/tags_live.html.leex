@@ -1,4 +1,4 @@
-<%= link("Text SEC Filing", to: "https://www.sec.gov/Archives/#{SecFilings.TagExtractor.gen_filename(@cik, @adsh)}") %> &nbsp;|&nbsp; <%= link("SEC EDGAR Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
+<%= link("Text SEC Filing", to: "https://www.sec.gov/Archives/#{SecFilings.Util.generate_filename(@cik, @adsh)}") %> &nbsp;|&nbsp; <%= link("SEC EDGAR Interactive Data", to: "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{@cik}&accession_number=#{@adsh}&xbrl_type=v") %>
 <hr>
 <form phx-change="search" phx-submit="search">
     <label for="q">Filter Tag (e.g. "NetIncomeLoss" or "Revenue")</label>

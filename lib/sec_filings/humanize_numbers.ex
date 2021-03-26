@@ -31,11 +31,7 @@ defmodule SecFilings.HumanizeNumbers do
     "#{Float.round(n / 1.0e18, 1)} Quintillion"
   end
 
-  def repr(%{"instant" => dt}) do
-    "#{dt}"
-  end
-
-  def repr(%{"startDate" => start_dt, "endDate" => end_dt}) do
+  def repr(%{:start_date => start_dt, :end_date => end_dt}) do
     "#{start_dt} to #{end_dt}"
   end
 end
