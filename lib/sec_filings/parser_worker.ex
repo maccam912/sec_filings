@@ -1,5 +1,6 @@
 defmodule SecFilings.ParserWorker do
   import Ecto.Query, warn: false
+  use GenServer
   alias SecFilings.Repo
 
   def get_unprocessed_documents() do
@@ -7,6 +8,14 @@ defmodule SecFilings.ParserWorker do
     |> Enum.filter(fn item ->
       is_nil(item.parsed_documents)
     end)
+  end
+
+  def get_unprocessed_documents(n) do
+    Repo.all(from d in SecFilings.Raw.Index, preload: [:parsed_documents])
+    |> Enum.filter(fn item ->
+      is_nil(item.parsed_documents)
+    end)
+    |> Enum.take(n)
   end
 
   def process_document_contexts(document_string, index_id) do
@@ -64,25 +73,36 @@ defmodule SecFilings.ParserWorker do
     |> Stream.run()
   end
 
-  def process_document(document_string, cik, adsh) do
-    IO.puts("Processing context for #{adsh}")
-    filename = SecFilings.Util.generate_filename(cik, adsh)
-
-    index_id =
-      Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^filename, select: i.id)
-
+  def _process_document(document_string, adsh, index_id) do
     process_document_contexts(document_string, index_id)
-    IO.puts("Processing tags for #{adsh}")
     # Contexts need to exist in db before we do tags
     process_document_tags(document_string, index_id)
 
     SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
       dt_processed: Date.utc_today(),
+      status: true,
       index_id: index_id
     })
     |> Repo.insert()
+  end
 
-    IO.puts("Done with #{adsh}")
+  def process_document(document_string, cik, adsh) do
+    filename = SecFilings.Util.generate_filename(cik, adsh)
+
+    index_id =
+      Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^filename, select: i.id)
+
+    try do
+      _process_document(document_string, adsh, index_id)
+    rescue
+      _ ->
+        SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
+          dt_processed: Date.utc_today(),
+          status: false,
+          index_id: index_id
+        })
+        |> Repo.insert()
+    end
   end
 
   def process_all() do
@@ -95,5 +115,37 @@ defmodule SecFilings.ParserWorker do
       |> process_document(cik, adsh)
     end)
     |> Stream.run()
+  end
+
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  @impl true
+  def init(state) do
+    Process.send_after(__MODULE__, :update, 1000 * 60 * 15)
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_info(:update, []) do
+    unprocessed = get_unprocessed_documents(20)
+
+    send(self(), :update)
+    {:noreply, unprocessed}
+  end
+
+  @impl true
+  def handle_info(:update, unprocessed) do
+    [document | rest] = unprocessed
+
+    [_, _, cik, adsh, _] = String.split(document.filename, ["/", "."])
+
+    SecFilings.Util.generate_url(cik, adsh)
+    |> SecFilings.DocumentGetter.get_doc()
+    |> process_document(cik, adsh)
+
+    send(self(), :update)
+    {:noreply, rest}
   end
 end

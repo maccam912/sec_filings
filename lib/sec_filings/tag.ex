@@ -5,7 +5,7 @@ defmodule SecFilings.Tag do
   schema "tags" do
     field :tag, :string
     field :value, :float
-    belongs_to :contexts, SecFilings.Context
+    belongs_to :context, SecFilings.Context
 
     timestamps()
   end

@@ -4,6 +4,7 @@ defmodule SecFilings.ParsedDocument do
 
   schema "parsed_documents" do
     field :dt_processed, :date
+    field :status, :boolean
     belongs_to :index, SecFilings.Raw.Index
 
     timestamps()
@@ -12,7 +13,7 @@ defmodule SecFilings.ParsedDocument do
   @doc false
   def changeset(parsed_document, attrs) do
     parsed_document
-    |> cast(attrs, [:dt_processed, :index_id])
-    |> validate_required([:dt_processed, :index_id])
+    |> cast(attrs, [:dt_processed, :status, :index_id])
+    |> validate_required([:dt_processed, :status, :index_id])
   end
 end

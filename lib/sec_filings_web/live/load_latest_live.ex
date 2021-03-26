@@ -5,7 +5,9 @@ defmodule SecFilingsWeb.LoadLatestLive do
   @impl true
   def mount(_params, _session, socket) do
     send(self(), :update)
-    {:ok, assign(socket, status: "Updating...")}
+    done = SecFilings.Repo.one(from i in SecFilings.ParsedDocument, select: count(i.id))
+    total = SecFilings.Repo.one(from i in SecFilings.Raw.Index, select: count(i.id))
+    {:ok, assign(socket, done: done, total: total)}
   end
 
   @impl true
@@ -38,6 +40,6 @@ defmodule SecFilingsWeb.LoadLatestLive do
     end)
     |> Enum.to_list()
 
-    {:noreply, assign(state, status: "Updated!")}
+    {:noreply, state}
   end
 end

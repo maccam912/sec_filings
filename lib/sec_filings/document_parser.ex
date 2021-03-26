@@ -66,13 +66,13 @@ defmodule SecFilings.DocumentParser do
     parsed_period =
       case period do
         {'period', [], [{'instant', [], [dt]}]} ->
-          dt = Datix.Date.parse!(to_string(dt), "%x")
+          dt = Datix.Date.parse!(to_string(dt) |> String.trim(), "%x")
           %{:start_date => dt, :end_date => dt}
 
         {'period', [], [{'startDate', [], [start_dt]}, {'endDate', [], [end_dt]}]} ->
           %{
-            :start_date => Datix.Date.parse!(to_string(start_dt), "%x"),
-            :end_date => Datix.Date.parse!(to_string(end_dt), "%x")
+            :start_date => Datix.Date.parse!(to_string(start_dt) |> String.trim(), "%x"),
+            :end_date => Datix.Date.parse!(to_string(end_dt) |> String.trim(), "%x")
           }
       end
 
