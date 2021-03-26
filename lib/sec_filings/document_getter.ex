@@ -16,4 +16,8 @@ defmodule SecFilings.DocumentGetter do
     true = Cachex.put!(:filings_cache, url, body)
     body
   end
+
+  def get_doc(url) do
+    Cachex.get!(:filings_cache, url) || download_doc(url)
+  end
 end

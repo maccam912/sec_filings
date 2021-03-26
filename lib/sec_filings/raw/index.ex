@@ -8,6 +8,8 @@ defmodule SecFilings.Raw.Index do
     field :form_type, :string
     field :date_filed, :date
     field :filename, :string
+    has_one :parsed_documents, SecFilings.ParsedDocument
+    has_many :contexts, SecFilings.Context
 
     timestamps()
   end

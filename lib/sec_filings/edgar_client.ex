@@ -67,29 +67,4 @@ defmodule SecFilings.EdgarClient do
       }
     end)
   end
-
-  def old_get_financial_statements(filename) do
-    parts = String.split(filename, ["/"])
-    cik = Enum.at(parts, 2)
-    adsh_txt = Enum.at(parts, 3)
-
-    adsh =
-      String.split(adsh_txt, ["."])
-      |> List.first()
-
-    # "https://www.sec.gov/cgi-bin/viewer?action=view&cik=#{cik}&accession_number=#{adsh}&xbrl_type=v"
-    adsh_fixed = String.replace(adsh, "-", "")
-
-    1..10
-    |> Enum.map(fn num ->
-      "https://www.sec.gov/Archives/edgar/data/#{cik}/#{adsh_fixed}/R#{num}.htm"
-    end)
-    |> Flow.from_enumerable()
-    |> Flow.map(fn url ->
-      HTTPoison.get(url, [], hackney: [pool: :first_pool])
-    end)
-    |> Flow.filter(fn {st, response} -> st == :ok and response.status_code == 200 end)
-    |> Flow.map(fn {:ok, %HTTPoison.Response{body: body}} -> Floki.parse_document(body) end)
-    |> Enum.to_list()
-  end
 end
