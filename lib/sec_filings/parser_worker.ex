@@ -123,7 +123,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def init(state) do
-    Process.send_after(__MODULE__, :update, 1000 * 60)
+    Process.send_after(__MODULE__, :update, 1000 * 10)
     {:ok, state}
   end
 
@@ -131,7 +131,7 @@ defmodule SecFilings.ParserWorker do
   def handle_info(:update, []) do
     unprocessed = get_unprocessed_documents(20)
 
-    send(self(), :update)
+    Process.send_after(__MODULE__, :update, 1000 * 3)
     {:noreply, unprocessed}
   end
 
@@ -145,7 +145,7 @@ defmodule SecFilings.ParserWorker do
     |> SecFilings.DocumentGetter.get_doc()
     |> process_document(cik, adsh)
 
-    send(self(), :update)
+    Process.send_after(__MODULE__, :update, 1000 * 3)
     {:noreply, rest}
   end
 end
