@@ -1,2 +1,2 @@
-mix ecto.migrate
+#mix ecto.migrate
 mix phx.server
