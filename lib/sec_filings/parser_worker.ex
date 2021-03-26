@@ -73,7 +73,7 @@ defmodule SecFilings.ParserWorker do
     |> Stream.run()
   end
 
-  def _process_document(document_string, adsh, index_id) do
+  def _process_document(document_string, index_id) do
     process_document_contexts(document_string, index_id)
     # Contexts need to exist in db before we do tags
     process_document_tags(document_string, index_id)
@@ -93,7 +93,7 @@ defmodule SecFilings.ParserWorker do
       Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^filename, select: i.id)
 
     try do
-      _process_document(document_string, adsh, index_id)
+      _process_document(document_string, index_id)
     rescue
       _ ->
         SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
@@ -123,7 +123,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def init(state) do
-    Process.send_after(__MODULE__, :update, 1000 * 60 * 15)
+    Process.send_after(__MODULE__, :update, 1000 * 60)
     {:ok, state}
   end
 
