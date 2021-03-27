@@ -4,18 +4,16 @@ defmodule SecFilings.ParserWorker do
   alias SecFilings.Repo
 
   def get_unprocessed_documents() do
-    Repo.all(from d in SecFilings.Raw.Index, preload: [:parsed_documents])
-    |> Enum.filter(fn item ->
-      is_nil(item.parsed_documents)
-    end)
+    q1 = from p in SecFilings.ParsedDocument, select: p.index_id
+    SecFilings.Repo.all(from i in SecFilings.Raw.Index, where: i.id not in subquery(q1))
   end
 
   def get_unprocessed_documents(n) do
-    Repo.all(from d in SecFilings.Raw.Index, preload: [:parsed_documents])
-    |> Enum.filter(fn item ->
-      is_nil(item.parsed_documents)
-    end)
-    |> Enum.take(n)
+    q1 = from p in SecFilings.ParsedDocument, select: p.index_id
+
+    SecFilings.Repo.all(
+      from i in SecFilings.Raw.Index, where: i.id not in subquery(q1), limit: ^n
+    )
   end
 
   def process_document_contexts(document_string, index_id) do
