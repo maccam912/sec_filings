@@ -11,6 +11,14 @@ defmodule SecFilingsWeb.LoadLatestLive do
   end
 
   @impl true
+  def handle_info(:refresh, socket) do
+    done = SecFilings.Repo.one(from i in SecFilings.ParsedDocument, select: count(i.id))
+    total = SecFilings.Repo.one(from i in SecFilings.Raw.Index, select: count(i.id))
+    Process.send_after(self(), :refresh, 10000)
+    {:ok, assign(socket, done: done, total: total)}
+  end
+
+  @impl true
   def handle_info(:update, state) do
     years = 2021..2021
     qtrs = ["QTR1", "QTR2", "QTR3", "QTR4"]
@@ -40,6 +48,7 @@ defmodule SecFilingsWeb.LoadLatestLive do
     end)
     |> Enum.to_list()
 
+    Process.send_after(self(), :refresh, 1000)
     {:noreply, state}
   end
 end
