@@ -88,7 +88,7 @@ hooks.chart = {
         chart.setOption(option)
 
         this.handleEvent("data", (data) => {
-            const tags = ["Earnings", "Sales", "Operating Cash Flow", "CapEx", "Free Cash Flow"]
+            const tags = ["Earnings", "Sales", "Operating Cash Flow", "CapEx"]
 
             var option = chart.getOption()
             option.series = []
