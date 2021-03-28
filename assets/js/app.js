@@ -95,17 +95,20 @@ hooks.chart = {
             option.dataset = []
 
             for (var i = 0; i < tags.length; i++) {
-                option.series.push({name: tags[i], type: 'line', datasetIndex: i, smooth: true})
+                option.series.push({name: tags[i], type: 'scatter', datasetIndex: i, smooth: true})
                 option.dataset.push({source: []})
             }
 
-            for (const key in data.data) {
-                for (var i = 0; i < tags.length; i++) {
-                    const tag = tags[i]
-                    option.dataset[i].source.push([key, data.data[key][tag]])
-                }
+            for (var i = 0; i < data.data.length; i++) {
+                const item = data.data[i]
+                const t = item["tag"]
+                console.log(t)
+                const tag_idx = tags.indexOf(t)
+                console.log(tag_idx)
+                option.dataset[tag_idx].source.push([item["end_date"], item["value"]])
             }
 
+            console.log(option.dataset)
             for (var i = 0; i < option.dataset.length; i++) {
                 option.dataset[i].source = option.dataset[i].source.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]))
             }
