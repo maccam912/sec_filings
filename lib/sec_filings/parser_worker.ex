@@ -119,7 +119,7 @@ defmodule SecFilings.ParserWorker do
 
   def process_batch(docs) do
     docs
-    |> Flow.from_enumerable(stages: 20, min_demand: 0, max_demand: 80)
+    |> Flow.from_enumerable(stages: 40, min_demand: 40, max_demand: 80)
     |> Flow.map(fn index ->
       [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
 
