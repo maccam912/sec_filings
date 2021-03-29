@@ -103,6 +103,17 @@ defmodule SecFilings.ParserWorker do
     end
   end
 
+  def process_batch_debug(docs) do
+    docs
+    |> Enum.map(fn index ->
+      [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
+
+      SecFilings.Util.generate_url(cik, adsh)
+      |> SecFilings.DocumentGetter.get_doc()
+      |> process_document(cik, adsh)
+    end)
+  end
+
   def process_batch(docs) do
     docs
     |> Flow.from_enumerable(stages: 20, min_demand: 40, max_demand: 80)
@@ -121,7 +132,7 @@ defmodule SecFilings.ParserWorker do
   end
 
   def process_n(n) do
-    process_batch(get_unprocessed_documents(n))
+    process_batch_debug(get_unprocessed_documents(n))
   end
 
   def start_link(_opts) do
