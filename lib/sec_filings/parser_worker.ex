@@ -105,7 +105,7 @@ defmodule SecFilings.ParserWorker do
 
   def process_batch(docs) do
     docs
-    |> Flow.from_enumerable(stages: 20)
+    |> Flow.from_enumerable(stages: 20, min_demand: 20, max_demand: 40)
     |> Flow.map(fn index ->
       [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
 
@@ -136,7 +136,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, []) do
-    process_n(400)
+    process_n(80)
     Process.send_after(__MODULE__, :update, 1000 * 3)
     {:noreply, []}
   end
