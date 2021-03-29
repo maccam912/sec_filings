@@ -103,8 +103,8 @@ defmodule SecFilings.ParserWorker do
     end
   end
 
-  def process_all() do
-    get_unprocessed_documents()
+  def process_batch(docs) do
+    docs
     |> Stream.map(fn index ->
       [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
 
@@ -113,6 +113,14 @@ defmodule SecFilings.ParserWorker do
       |> process_document(cik, adsh)
     end)
     |> Stream.run()
+  end
+
+  def process_all() do
+    process_batch(get_unprocessed_documents())
+  end
+
+  def process_n(n) do
+    process_batch(get_unprocessed_documents(n))
   end
 
   def start_link(_opts) do
