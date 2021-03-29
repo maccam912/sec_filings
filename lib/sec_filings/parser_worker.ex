@@ -132,7 +132,7 @@ defmodule SecFilings.ParserWorker do
   end
 
   def process_n(n) do
-    process_batch_debug(get_unprocessed_documents(n))
+    process_batch(get_unprocessed_documents(n))
   end
 
   def start_link(_opts) do

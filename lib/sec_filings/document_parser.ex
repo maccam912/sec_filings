@@ -55,8 +55,14 @@ defmodule SecFilings.DocumentParser do
   to parse out the contents. It returns a map.
   """
   def parse_context_string(context_string) do
-    {:ok, context_node, _tail} = :erlsom.simple_form(context_string)
-    get_period(context_node)
+    try do
+      {:ok, context_node, _tail} = :erlsom.simple_form(context_string)
+      get_period(context_node)
+    catch
+      x ->
+        IO.inspect(x)
+        nil
+    end
   end
 
   @doc """
