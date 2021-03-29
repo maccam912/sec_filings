@@ -22,23 +22,17 @@ defmodule SecFilings.DocumentParser do
   a map, %{<tag name> => %{context: <context id>, value: <some value>}}
   """
   def parse_tag_string(tag_string) do
-    try do
-      {:ok, node, _tail} = :erlsom.simple_form(tag_string)
-      {tag, attr_list, [content]} = node
+    {:ok, node, _tail} = :erlsom.simple_form(tag_string)
+    {tag, attr_list, [content]} = node
 
-      value =
-        case Float.parse(to_string(content)) do
-          {value, ""} -> value
-          _ -> content
-        end
+    value =
+      case Float.parse(to_string(content)) do
+        {value, ""} -> value
+        _ -> content
+      end
 
-      attr_map = attr_list |> Enum.into(%{})
-      %{to_string(tag) => %{value: value, context: to_string(attr_map['contextRef'])}}
-    catch
-      x ->
-        IO.inspect(x)
-        nil
-    end
+    attr_map = attr_list |> Enum.into(%{})
+    %{to_string(tag) => %{value: value, context: to_string(attr_map['contextRef'])}}
   end
 
   @doc """
@@ -55,14 +49,8 @@ defmodule SecFilings.DocumentParser do
   to parse out the contents. It returns a map.
   """
   def parse_context_string(context_string) do
-    try do
-      {:ok, context_node, _tail} = :erlsom.simple_form(context_string)
-      get_period(context_node)
-    catch
-      x ->
-        IO.inspect(x)
-        nil
-    end
+    {:ok, context_node, _tail} = :erlsom.simple_form(context_string)
+    get_period(context_node)
   end
 
   @doc """
