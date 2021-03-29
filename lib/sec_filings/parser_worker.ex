@@ -138,23 +138,30 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, []) do
-    unprocessed = get_unprocessed_documents(20)
-
+    process_n(400)
     Process.send_after(__MODULE__, :update, 1000 * 3)
-    {:noreply, unprocessed}
+    {:noreply, []}
   end
 
-  @impl true
-  def handle_info(:update, unprocessed) do
-    [document | rest] = unprocessed
+  # @impl true
+  # def handle_info(:update, []) do
+  #   unprocessed = get_unprocessed_documents(400)
 
-    [_, _, cik, adsh, _] = String.split(document.filename, ["/", "."])
+  #   Process.send_after(__MODULE__, :update, 1000 * 3)
+  #   {:noreply, unprocessed}
+  # end
 
-    SecFilings.Util.generate_url(cik, adsh)
-    |> SecFilings.DocumentGetter.get_doc()
-    |> process_document(cik, adsh)
+  # @impl true
+  # def handle_info(:update, unprocessed) do
+  #   [document | rest] = unprocessed
 
-    Process.send_after(__MODULE__, :update, 1000 * 3)
-    {:noreply, rest}
-  end
+  #   [_, _, cik, adsh, _] = String.split(document.filename, ["/", "."])
+
+  #   SecFilings.Util.generate_url(cik, adsh)
+  #   |> SecFilings.DocumentGetter.get_doc()
+  #   |> process_document(cik, adsh)
+
+  #   Process.send_after(__MODULE__, :update, 1000 * 3)
+  #   {:noreply, rest}
+  # end
 end
