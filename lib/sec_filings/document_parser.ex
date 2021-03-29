@@ -74,6 +74,9 @@ defmodule SecFilings.DocumentParser do
             :start_date => Datix.Date.parse!(to_string(start_dt) |> String.trim(), "%x"),
             :end_date => Datix.Date.parse!(to_string(end_dt) |> String.trim(), "%x")
           }
+
+        _ ->
+          nil
       end
 
     %{id => parsed_period}
