@@ -104,6 +104,8 @@ defmodule SecFilings.ParserWorker do
   end
 
   def process_batch(docs) do
+    total = length(docs)
+
     docs
     |> Stream.map(fn index ->
       [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
@@ -112,6 +114,7 @@ defmodule SecFilings.ParserWorker do
       |> SecFilings.DocumentGetter.get_doc()
       |> process_document(cik, adsh)
     end)
+    |> Tqdm.tqdm(total: total)
     |> Stream.run()
   end
 
