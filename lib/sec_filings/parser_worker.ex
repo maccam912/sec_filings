@@ -94,7 +94,7 @@ defmodule SecFilings.ParserWorker do
       _process_document(document_string, index_id)
     catch
       x ->
-        IO.inspect("Got #{x}")
+        IO.inspect(x)
 
         SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
           dt_processed: Date.utc_today(),
