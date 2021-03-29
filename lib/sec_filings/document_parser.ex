@@ -82,6 +82,10 @@ defmodule SecFilings.DocumentParser do
     %{id => parsed_period}
   end
 
+  def get_period(_) do
+    nil
+  end
+
   # @doc """
   # parse! and parse read in an entire document, then parse out all
   # items using erlsom, if possible.
