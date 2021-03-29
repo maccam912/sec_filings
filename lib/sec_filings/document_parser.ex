@@ -35,7 +35,9 @@ defmodule SecFilings.DocumentParser do
       attr_map = attr_list |> Enum.into(%{})
       %{to_string(tag) => %{value: value, context: to_string(attr_map['contextRef'])}}
     catch
-      x -> nil
+      x ->
+        IO.inspect(x)
+        nil
     end
   end
 
