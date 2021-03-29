@@ -19,6 +19,7 @@ defmodule SecFilings.ParserWorker do
   def process_document_contexts(document_string, index_id) do
     SecFilings.DocumentParser.get_context_strings(document_string)
     |> Stream.map(&SecFilings.DocumentParser.parse_context_string/1)
+    |> Stream.filter(fn item -> !is_nil(item) end)
     |> Stream.map(fn item ->
       [id] = Map.keys(item)
       sd = item[id][:start_date]
