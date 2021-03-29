@@ -104,18 +104,17 @@ defmodule SecFilings.ParserWorker do
   end
 
   def process_batch(docs) do
-    total = length(docs)
-
     docs
-    |> Stream.map(fn index ->
+    |> Flow.from_enumerable(stages: 10)
+    |> Flow.map(fn index ->
+      IO.puts("Processing #{index}")
       [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
 
       SecFilings.Util.generate_url(cik, adsh)
       |> SecFilings.DocumentGetter.get_doc()
       |> process_document(cik, adsh)
     end)
-    |> Tqdm.tqdm(total: total)
-    |> Stream.run()
+    |> Flow.run()
   end
 
   def process_all() do
