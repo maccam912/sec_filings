@@ -107,13 +107,21 @@ defmodule SecFilings.ParserWorker do
   end
 
   def process_batch(docs) do
-    docs
-    |> Flow.from_enumerable(stages: 16, min_demand: 20, max_demand: 40)
-    |> Flow.map(fn index ->
-      [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
+    cik_adsh =
+      docs
+      |> Enum.map(fn index ->
+        [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
+        Task.start(fn -> SecFilings.DocumentGetter.get_doc(cik, adsh) end)
+        {cik, adsh}
+      end)
 
-      SecFilings.DocumentGetter.get_doc(cik, adsh)
-      |> process_document(cik, adsh)
+    cik_adsh
+    |> Flow.from_enumerable(stages: 6, min_demand: 0, max_demand: 30)
+    |> Flow.map(fn {cik, adsh} ->
+      {SecFilings.DocumentGetter.get_doc(cik, adsh), cik, adsh}
+    end)
+    |> Flow.map(fn {doc, cik, adsh} ->
+      process_document(doc, cik, adsh)
     end)
     |> Flow.run()
   end
@@ -133,13 +141,13 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def init(state) do
-    Process.send_after(__MODULE__, :update, 1000 * 10)
+    Process.send_after(__MODULE__, :update, 1000 * 1)
     {:ok, state}
   end
 
   @impl true
   def handle_info(:update, []) do
-    process_n(400)
+    process_n(30)
     Process.send_after(__MODULE__, :update, 1000 * 3)
     {:noreply, []}
   end
