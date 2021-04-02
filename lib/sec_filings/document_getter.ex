@@ -9,15 +9,28 @@ defmodule SecFilings.DocumentGetter do
   pool :first_pool. It then stores it in :filings_cache under the
   url as the key, and returns the body of the document.
   """
-  def download_doc(url) do
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-      HTTPoison.get(url, [], hackney: [pool: :first_pool])
+  def download_doc(cik, adsh) do
+    wasabi_url = "https://s3.wasabisys.com/sec-filings/#{adsh}.txt.gz"
 
-    true = Cachex.put!(:filings_cache, url, body)
+    body =
+      case HTTPoison.get(wasabi_url, [], hackney: [pool: :first_pool]) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+          [body] |> StreamGzip.gunzip() |> Enum.into("")
+
+        _ ->
+          {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
+            HTTPoison.get(SecFilings.Util.generate_url(cik, adsh), [],
+              hackney: [pool: :first_pool]
+            )
+
+          body
+      end
+
+    true = Cachex.put!(:filings_cache, adsh, body)
     body
   end
 
-  def get_doc(url) do
-    Cachex.get!(:filings_cache, url) || download_doc(url)
+  def get_doc(cik, adsh) do
+    Cachex.get!(:filings_cache, adsh) || download_doc(cik, adsh)
   end
 end
