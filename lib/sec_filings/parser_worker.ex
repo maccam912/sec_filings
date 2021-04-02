@@ -116,7 +116,7 @@ defmodule SecFilings.ParserWorker do
       end)
 
     cik_adsh
-    |> Flow.from_enumerable(stages: 6, min_demand: 0, max_demand: 30)
+    |> Flow.from_enumerable(stages: 12, min_demand: 24, max_demand: 48)
     |> Flow.map(fn {cik, adsh} ->
       {SecFilings.DocumentGetter.get_doc(cik, adsh), cik, adsh}
     end)
@@ -147,7 +147,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, []) do
-    process_n(30)
+    process_n(3000)
     Process.send_after(__MODULE__, :update, 1000 * 3)
     {:noreply, []}
   end
