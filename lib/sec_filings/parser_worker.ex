@@ -107,17 +107,10 @@ defmodule SecFilings.ParserWorker do
   end
 
   def process_batch(docs) do
-    cik_adsh =
-      docs
-      |> Enum.map(fn index ->
-        [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
-        Task.start(fn -> SecFilings.DocumentGetter.get_doc(cik, adsh) end)
-        {cik, adsh}
-      end)
-
-    cik_adsh
+    docs
     |> Flow.from_enumerable(stages: 12, min_demand: 24, max_demand: 48)
-    |> Flow.map(fn {cik, adsh} ->
+    |> Flow.map(fn index ->
+      [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
       {SecFilings.DocumentGetter.get_doc(cik, adsh), cik, adsh}
     end)
     |> Flow.map(fn {doc, cik, adsh} ->
