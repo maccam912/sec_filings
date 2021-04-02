@@ -12,7 +12,10 @@ defmodule SecFilings.ParserWorker do
     q1 = from p in SecFilings.ParsedDocument, select: p.index_id
 
     SecFilings.Repo.all(
-      from i in SecFilings.Raw.Index, where: i.id not in subquery(q1), limit: ^n
+      from i in SecFilings.Raw.Index,
+        where: i.id not in subquery(q1),
+        order_by: fragment("RANDOM()"),
+        limit: ^n
     )
   end
 
