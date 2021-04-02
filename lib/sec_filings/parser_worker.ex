@@ -147,7 +147,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, []) do
-    process_n(3000)
+    process_n(1200)
     Process.send_after(__MODULE__, :update, 1000 * 3)
     {:noreply, []}
   end
