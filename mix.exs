@@ -20,7 +20,7 @@ defmodule SecFilings.MixProject do
   def application do
     [
       mod: {SecFilings.Application, []},
-      extra_applications: [:logger, :runtime_tools, :cachex, :iex]
+      extra_applications: [:logger, :runtime_tools, :iex]
     ]
   end
 
