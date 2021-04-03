@@ -26,11 +26,12 @@ defmodule SecFilings.DocumentGetter do
           body
       end
 
-    true = Cachex.put!(:filings_cache, adsh, body)
+    # true = Cachex.put!(:filings_cache, adsh, body)
     body
   end
 
   def get_doc(cik, adsh) do
-    Cachex.get!(:filings_cache, adsh) || download_doc(cik, adsh)
+    download_doc(cik, adsh)
+    # Cachex.get!(:filings_cache, adsh) || download_doc(cik, adsh)
   end
 end

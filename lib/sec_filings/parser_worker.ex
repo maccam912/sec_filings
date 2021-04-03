@@ -116,7 +116,7 @@ defmodule SecFilings.ParserWorker do
       end)
 
     cik_adsh
-    |> Flow.from_enumerable(stages: 6, min_demand: 0, max_demand: 30)
+    |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
     |> Flow.map(fn {cik, adsh} ->
       {SecFilings.DocumentGetter.get_doc(cik, adsh), cik, adsh}
     end)
