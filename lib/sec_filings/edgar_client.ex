@@ -4,7 +4,7 @@ defmodule SecFilings.EdgarClient do
 
   def get_index(url) do
     {st, %HTTPoison.Response{body: body}} =
-      HTTPoison.get(url, %{"User-Agent" => "githubcom-maccam912-sec_filings/1.0"},
+      HTTPoison.get(url, %{"User-Agent" => "SecFilings/1.0 github.com/maccam912/sec_filings"},
         hackney: [:insecure, pool: :first_pool]
       )
 
@@ -45,7 +45,7 @@ defmodule SecFilings.EdgarClient do
     {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
       HTTPoison.get(
         "https://www.sec.gov/Archives/#{filename}",
-        %{"User-Agent" => "githubcom-maccam912-sec_filings/1.0"},
+        %{"User-Agent" => "SecFilings/1.0 github.com/maccam912/sec_filings"},
         hackney: [:insecure, pool: :first_pool]
       )
 
