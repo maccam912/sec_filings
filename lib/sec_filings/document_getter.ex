@@ -15,7 +15,7 @@ defmodule SecFilings.DocumentGetter do
     body =
       case HTTPoison.get(
              wasabi_url,
-             %{"User-Agent" => "SecFilings/1.0 github.com/maccam912/sec_filings"},
+             %{"User-Agent" => "SecFilings/1.0"},
              hackney: [pool: :first_pool]
            ) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
@@ -25,7 +25,7 @@ defmodule SecFilings.DocumentGetter do
           {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
             HTTPoison.get(
               SecFilings.Util.generate_url(cik, adsh),
-              %{"User-Agent" => "SecFilings/1.0 github.com/maccam912/sec_filings"},
+              %{"User-Agent" => "SecFilings/1.0"},
               hackney: [pool: :first_pool]
             )
 
