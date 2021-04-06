@@ -40,10 +40,11 @@ multi =
     SecFilings.Raw.Index.changeset(%SecFilings.Raw.Index{}, item)
   end)
   |> Enum.filter(fn item -> item.valid? end)
+  |> Enum.uniq()
   |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-    Ecto.Multi.insert(acc, item, item)
+    Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
   end)
 
-IO.inspect(SecFilings.Repo.transaction(multi, timeout: :infinity))
+SecFilings.Repo.transaction(multi, timeout: :infinity)
 
 IO.puts("Done inserting into DB")

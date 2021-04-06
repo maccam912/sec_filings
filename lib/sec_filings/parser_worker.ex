@@ -71,7 +71,7 @@ defmodule SecFilings.ParserWorker do
       process_document_context_changesets(document_string, index_id)
       |> Enum.filter(fn changeset -> changeset.valid? end)
       |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-        Ecto.Multi.insert(acc, item, item)
+        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
       end)
 
     {:ok, _} = SecFilings.Repo.transaction(context_multi)
@@ -81,7 +81,7 @@ defmodule SecFilings.ParserWorker do
       process_document_tag_changesets(document_string, index_id)
       |> Enum.filter(fn changeset -> changeset.valid? end)
       |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-        Ecto.Multi.insert(acc, item, item)
+        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
       end)
 
     {:ok, _} = SecFilings.Repo.transaction(tag_multi)
