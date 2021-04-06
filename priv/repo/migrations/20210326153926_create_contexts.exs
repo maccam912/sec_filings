@@ -2,7 +2,7 @@ defmodule SecFilings.Repo.Migrations.CreateContexts do
   use Ecto.Migration
 
   def change do
-    create table(:contexts) do
+    create table(:contexts, options: "ROW_FORMAT=COMPRESSED") do
       add :context_id, :text, null: false
       add :start_date, :date, null: false
       add :end_date, :date, null: false

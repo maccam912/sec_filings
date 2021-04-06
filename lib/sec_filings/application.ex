@@ -14,7 +14,7 @@ defmodule SecFilings.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: SecFilings.PubSub},
       # Start the Endpoint (http/https)
-      SecFilingsWeb.Endpoint,
+      SecFilingsWeb.Endpoint
       # Start a worker by calling: SecFilings.Worker.start_link(arg)
       # {SecFilings.ParserWorker, []}
       # {SecFilings.Worker, arg}
