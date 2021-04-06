@@ -19,7 +19,7 @@ defmodule SecFilings.ParserWorker do
     )
   end
 
-  def process_document_contexts(document_string, index_id) do
+  def process_document_context_changesets(document_string, index_id) do
     SecFilings.DocumentParser.get_context_strings(document_string)
     |> Stream.map(&SecFilings.DocumentParser.parse_context_string/1)
     |> Stream.map(fn item ->
@@ -34,13 +34,9 @@ defmodule SecFilings.ParserWorker do
         index_id: index_id
       })
     end)
-    |> Stream.map(fn changeset ->
-      Repo.insert(changeset)
-    end)
-    |> Stream.run()
   end
 
-  def process_document_tags(document_string, index_id) do
+  def process_document_tag_changesets(document_string, index_id) do
     SecFilings.DocumentParser.get_tag_strings(document_string)
     |> Stream.map(fn tag_string ->
       try do
@@ -68,16 +64,25 @@ defmodule SecFilings.ParserWorker do
         context_id: context_id
       })
     end)
-    |> Stream.map(fn changeset ->
-      Repo.insert(changeset)
-    end)
-    |> Stream.run()
   end
 
   def _process_document(document_string, index_id) do
-    process_document_contexts(document_string, index_id)
+    context_multi =
+      process_document_context_changesets(document_string, index_id)
+      |> Enum.reduce(Ecto.Multi.new(), fn item, acc ->
+        Ecto.Multi.append(acc, item)
+      end)
+
+    {:ok, _} = SecFilings.Repo.transaction(context_multi)
+
     # Contexts need to exist in db before we do tags
-    process_document_tags(document_string, index_id)
+    tag_multi =
+      process_document_tag_changesets(document_string, index_id)
+      |> Enum.reduce(Ecto.Multi.new(), fn item, acc ->
+        Ecto.Multi.append(acc, item)
+      end)
+
+    {:ok, _} = SecFilings.Repo.transaction(tag_multi)
 
     SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
       dt_processed: Date.utc_today(),
