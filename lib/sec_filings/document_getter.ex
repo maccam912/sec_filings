@@ -13,7 +13,9 @@ defmodule SecFilings.DocumentGetter do
     wasabi_url = "https://s3.wasabisys.com/sec-filings/#{adsh}.txt.gz"
 
     body =
-      case HTTPoison.get(wasabi_url, [], hackney: [pool: :first_pool]) do
+      case HTTPoison.get(wasabi_url, %{"User-Agent" => "githubcom-maccam912-sec_filings/1.0"},
+             hackney: [pool: :first_pool]
+           ) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
           [body] |> StreamGzip.gunzip() |> Enum.into("")
 
