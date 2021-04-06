@@ -2,8 +2,8 @@ use Mix.Config
 
 # Configure your database
 config :sec_filings, SecFilings.Repo,
-  username: "root",
-  # username: "postgres",
+  #username: "root",
+  username: "postgres",
   password: "postgres",
   # password: System.get_env("DB_PASS"),
   database: "sec_filings_dev",
