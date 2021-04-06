@@ -69,8 +69,9 @@ defmodule SecFilings.ParserWorker do
   def _process_document(document_string, index_id) do
     context_multi =
       process_document_context_changesets(document_string, index_id)
-      |> Enum.reduce(Ecto.Multi.new(), fn item, acc ->
-        Ecto.Multi.append(acc, item)
+      |> Enum.filter(fn changeset -> changeset.valid? end)
+      |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
+        Ecto.Multi.insert(acc, item, item)
       end)
 
     {:ok, _} = SecFilings.Repo.transaction(context_multi)
@@ -78,8 +79,9 @@ defmodule SecFilings.ParserWorker do
     # Contexts need to exist in db before we do tags
     tag_multi =
       process_document_tag_changesets(document_string, index_id)
-      |> Enum.reduce(Ecto.Multi.new(), fn item, acc ->
-        Ecto.Multi.append(acc, item)
+      |> Enum.filter(fn changeset -> changeset.valid? end)
+      |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
+        Ecto.Multi.insert(acc, item, item)
       end)
 
     {:ok, _} = SecFilings.Repo.transaction(tag_multi)

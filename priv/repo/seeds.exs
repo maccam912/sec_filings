@@ -32,12 +32,18 @@ indices =
 
 IO.puts("Done downloading contents. Inserting into DB...")
 
-indices
-|> Flow.from_enumerable()
-|> Flow.filter(fn item -> not is_nil(item) end)
-|> Flow.map(fn item ->
-  SecFilings.Raw.create_index(item)
-end)
-|> Enum.to_list()
+multi =
+  indices
+  |> Flow.from_enumerable()
+  |> Flow.filter(fn item -> not is_nil(item) end)
+  |> Flow.map(fn item ->
+    SecFilings.Raw.Index.changeset(%SecFilings.Raw.Index{}, item)
+  end)
+  |> Enum.filter(fn item -> item.valid? end)
+  |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
+    Ecto.Multi.insert(acc, item, item)
+  end)
+
+IO.inspect(SecFilings.Repo.transaction(multi, timeout: :infinity))
 
 IO.puts("Done inserting into DB")
