@@ -11,7 +11,7 @@ defmodule SecFilings.MemMon do
   end
 
   def handle_info(:check, state) do
-    if :erlang.memory()[:total] > 600_000_000 do
+    if :erlang.memory()[:total] > 1_250_000_000 do
       SecFilings.ParserWorker.kill()
     end
 
