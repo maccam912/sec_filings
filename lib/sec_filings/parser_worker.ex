@@ -173,4 +173,13 @@ defmodule SecFilings.ParserWorker do
   #   Process.send_after(__MODULE__, :update, 1000 * 3)
   #   {:noreply, rest}
   # end
+
+  def kill() do
+    GenServer.cast(__MODULE__, :kill)
+  end
+
+  @impl true
+  def handle_cast(:kill, state) do
+    {:stop, :oom, state}
+  end
 end
