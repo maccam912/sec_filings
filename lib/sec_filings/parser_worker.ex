@@ -151,9 +151,20 @@ defmodule SecFilings.ParserWorker do
   end
 
   @impl true
+  def handle_info({:doc, item}, state) do
+    [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
+    doc = SecFilings.DocumentGetter.get_doc(cik, adsh)
+    process_document(doc, cik, adsh)
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info(:update, state) do
     #{:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
-    process_n(100)
+    get_unprocessed_documents(100)
+    |> Enum.map(fn item ->
+      send(self(), {:doc, item})
+    end)
     send(self(), :update)
     {:noreply, state}
   end
