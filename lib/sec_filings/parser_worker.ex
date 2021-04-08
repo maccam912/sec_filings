@@ -149,7 +149,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, []) do
-    Task.start_link(fn -> process_n(1200) end)
+    Task.start_link(fn -> process_n(20) end)
     {:noreply, []}
   end
 
