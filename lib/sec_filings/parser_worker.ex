@@ -76,9 +76,15 @@ defmodule SecFilings.ParserWorker do
         end)
       end)
 
-    context_multi = Task.await(context_multi_task, 5000)
+    context_success =
+      case Task.yield(context_multi_task, 5000) do
+        {:ok, context_multi} ->
+          {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
+          true
 
-    {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
+        _ ->
+          false
+      end
 
     # Contexts need to exist in db before we do tags
     tag_multi_task =
@@ -91,13 +97,19 @@ defmodule SecFilings.ParserWorker do
         end)
       end)
 
-    tag_multi = Task.await(tag_multi_task, 5000)
+    tag_success =
+      case Task.yield(tag_multi_task, 5000) do
+        {:ok, tag_multi} ->
+          {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
+          true
 
-    {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
+        _ ->
+          false
+      end
 
     SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
       dt_processed: Date.utc_today(),
-      status: true,
+      status: tag_success and context_success,
       index_id: index_id
     })
     |> Repo.insert()
