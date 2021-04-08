@@ -66,22 +66,32 @@ defmodule SecFilings.ParserWorker do
   end
 
   def _process_document(document_string, index_id) do
-    context_multi =
-      process_document_context_changesets(document_string, index_id)
-      |> Enum.filter(fn changeset -> changeset.valid? end)
-      |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
+    context_multi_task =
+      Task.async(fn ->
+        process_document_context_changesets(document_string, index_id)
+        |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
+        |> Flow.filter(fn changeset -> changeset.valid? end)
+        |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
+          Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
+        end)
       end)
+
+    context_multi = Task.await(context_multi_task, 5000)
 
     {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
 
     # Contexts need to exist in db before we do tags
-    tag_multi =
-      process_document_tag_changesets(document_string, index_id)
-      |> Enum.filter(fn changeset -> changeset.valid? end)
-      |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
+    tag_multi_task =
+      Task.async(fn ->
+        process_document_tag_changesets(document_string, index_id)
+        |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
+        |> Flow.filter(fn changeset -> changeset.valid? end)
+        |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
+          Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
+        end)
       end)
+
+    tag_multi = Task.await(tag_multi_task, 5000)
 
     {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
 
@@ -136,7 +146,7 @@ defmodule SecFilings.ParserWorker do
 
   def task_process_n(n, pid) do
     process_n(n)
-    IO.puts "Sending update message"
+    IO.puts("Sending update message")
     send(pid, :update)
   end
 
@@ -160,11 +170,12 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, state) do
-    #{:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
+    # {:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
     get_unprocessed_documents(100)
     |> Enum.map(fn item ->
       send(self(), {:doc, item})
     end)
+
     send(self(), :update)
     {:noreply, state}
   end
