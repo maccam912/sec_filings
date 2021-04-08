@@ -4,17 +4,16 @@ defmodule SecFilings.ParserWorker do
   alias SecFilings.Repo
 
   def get_unprocessed_documents() do
-    q1 = from p in SecFilings.ParsedDocument, select: p.index_id
-    SecFilings.Repo.all(from i in SecFilings.Raw.Index, where: i.id not in subquery(q1))
+    get_unprocessed_documents(1_000_000)
   end
 
   def get_unprocessed_documents(n) do
-    q1 = from p in SecFilings.ParsedDocument, select: p.index_id
-
     SecFilings.Repo.all(
       from i in SecFilings.Raw.Index,
-        where: i.id not in subquery(q1),
-        order_by: fragment("RANDOM()"),
+        select: i.id,
+        join: p in SecFilings.ParsedDocument,
+        on: i.id == p.index_id,
+        where: is_nil(p.index_id),
         limit: ^n
     )
   end
