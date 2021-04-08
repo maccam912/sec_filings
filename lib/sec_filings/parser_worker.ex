@@ -136,6 +136,12 @@ defmodule SecFilings.ParserWorker do
     IO.puts("Done with batch")
   end
 
+  def task_process_n(n, pid) do
+    process_n(n)
+    IO.puts "Sending update message"
+    send(pid, :update)
+  end
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -148,31 +154,9 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, _state) do
-    {:ok, pid} = Task.start_link(fn -> process_n(100) end)
+    {:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
     {:noreply, pid}
   end
-
-  # @impl true
-  # def handle_info(:update, []) do
-  #   unprocessed = get_unprocessed_documents(400)
-
-  #   Process.send_after(__MODULE__, :update, 1000 * 3)
-  #   {:noreply, unprocessed}
-  # end
-
-  # @impl true
-  # def handle_info(:update, unprocessed) do
-  #   [document | rest] = unprocessed
-
-  #   [_, _, cik, adsh, _] = String.split(document.filename, ["/", "."])
-
-  #   SecFilings.Util.generate_url(cik, adsh)
-  #   |> SecFilings.DocumentGetter.get_doc()
-  #   |> process_document(cik, adsh)
-
-  #   Process.send_after(__MODULE__, :update, 1000 * 3)
-  #   {:noreply, rest}
-  # end
 
   def kill() do
     GenServer.cast(__MODULE__, :kill)
