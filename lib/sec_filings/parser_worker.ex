@@ -79,10 +79,12 @@ defmodule SecFilings.ParserWorker do
     context_success =
       case Task.yield(context_multi_task, 5000) do
         {:ok, context_multi} ->
+          IO.puts "Context insert transaction finished successfully!"
           {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
           true
 
         _ ->
+          IO.puts "Context insert transaction failed or took too long :("
           false
       end
 
@@ -100,14 +102,16 @@ defmodule SecFilings.ParserWorker do
     tag_success =
       case Task.yield(tag_multi_task, 5000) do
         {:ok, tag_multi} ->
+          IO.puts "Tags insert transaction finished successfully!"
           {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
           true
 
         _ ->
+          IO.puts "Tags insert transaction failed or took too long :("
           false
       end
 
-    SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
+    IO.inspect SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
       dt_processed: Date.utc_today(),
       status: tag_success and context_success,
       index_id: index_id
