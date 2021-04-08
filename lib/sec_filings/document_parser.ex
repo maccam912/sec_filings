@@ -22,17 +22,19 @@ defmodule SecFilings.DocumentParser do
   a map, %{<tag name> => %{context: <context id>, value: <some value>}}
   """
   def parse_tag_string(tag_string) do
-    {:ok, node, _tail} = :erlsom.simple_form(tag_string)
-    {tag, attr_list, [content]} = node
+    case :erlsom.simple_form(tag_string) do
+      {:ok, node, _tail} ->
+        {tag, attr_list, [content]} = node
 
-    value =
-      case Float.parse(to_string(content)) do
-        {value, ""} -> value
-        _ -> content
-      end
+        value =
+          case Float.parse(to_string(content)) do
+            {value, ""} -> value
+            _ -> content
+          end
 
-    attr_map = attr_list |> Enum.into(%{})
-    %{to_string(tag) => %{value: value, context: to_string(attr_map['contextRef'])}}
+        attr_map = attr_list |> Enum.into(%{})
+        %{to_string(tag) => %{value: value, context: to_string(attr_map['contextRef'])}}
+    end
   end
 
   @doc """
@@ -49,8 +51,9 @@ defmodule SecFilings.DocumentParser do
   to parse out the contents. It returns a map.
   """
   def parse_context_string(context_string) do
-    {:ok, context_node, _tail} = :erlsom.simple_form(context_string)
-    get_period(context_node)
+    case :erlsom.simple_form(context_string) do
+      {:ok, context_node, _tail} -> get_period(context_node)
+    end
   end
 
   @doc """
@@ -78,74 +81,4 @@ defmodule SecFilings.DocumentParser do
 
     %{id => parsed_period}
   end
-
-  # @doc """
-  # parse! and parse read in an entire document, then parse out all
-  # items using erlsom, if possible.
-  # """
-  # def parse!(document_text) do
-  #   {:ok, element, _tail} = :erlsom.simple_form(document_text)
-  #   {tag, attributes, content} = element
-  #   # TODO is this necessary?
-  #   # tag = to_string(tag)
-
-  #   content_as_strings = Enum.map(content, &to_string/1)
-
-  #   attr_map =
-  #     Enum.reduce(attributes, %{}, fn {key, value}, acc ->
-  #       Map.put(acc, to_string(key), to_string(value))
-  #     end)
-  #     |> Map.put("content", content_as_strings)
-
-  #   # if content_as_strings is empty
-  #   if length(content_as_strings) > 0 do
-  #     [content_string] = content_as_strings
-
-  #     parsed_value =
-  #       case Float.parse(content_string) do
-  #         {value_float, ""} -> value_float
-  #         value_string -> value_string
-  #       end
-
-  #     attr_map = Map.put(attr_map, "value", parsed_value)
-
-  #     {tag, attr_map}
-  #   else
-  #     nil
-  #   end
-  # end
-
-  # def parse(document_text) do
-  #   try do
-  #     parsed = parse!(document_text)
-  #     {:ok, parsed}
-  #   catch
-  #     _ -> {:error, nil}
-  #   end
-  # end
-
-  # @doc """
-  # Parse node accepts either an erlsom node or a string and returns a map,
-  # or possibly just a %{"text" => text} if it is not an erlsom node.
-  # """
-  # def parse_node({name, attrs, body}) do
-  #   attrs =
-  #     attrs
-  #     |> Enum.reduce(%{}, fn {key, value}, acc ->
-  #       Map.put(acc, to_string(key), to_string(value))
-  #     end)
-
-  #   content_map =
-  #     body
-  #     |> Enum.map(fn item -> parse_node(item) end)
-  #     |> Enum.reduce(%{}, fn map, acc ->
-  #       Map.merge(acc, map)
-  #     end)
-
-  #   %{to_string(name) => Map.merge(attrs, content_map)}
-  # end
-
-  # def parse_node(text) do
-  #   %{"text" => to_string(text)}
-  # end
 end

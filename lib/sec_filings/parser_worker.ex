@@ -10,7 +10,7 @@ defmodule SecFilings.ParserWorker do
   def get_unprocessed_documents(n) do
     SecFilings.Repo.all(
       from i in SecFilings.Raw.Index,
-        select: i.id,
+        select: i,
         left_join: p in SecFilings.ParsedDocument,
         on: i.id == p.index_id,
         where: is_nil(p.index_id),
@@ -40,7 +40,7 @@ defmodule SecFilings.ParserWorker do
     |> Stream.map(fn tag_string ->
       try do
         SecFilings.DocumentParser.parse_tag_string(tag_string)
-      rescue
+      catch
         _ -> nil
       end
     end)
@@ -132,7 +132,7 @@ defmodule SecFilings.ParserWorker do
   def process_n(n) do
     process_batch(get_unprocessed_documents(n))
 
-    Process.send_after(__MODULE__, :update, 1000 * 30)
+    Process.send_after(__MODULE__, :update, 1000 * 5)
     IO.puts("Done with batch")
   end
 
@@ -142,7 +142,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def init(state) do
-    Process.send_after(__MODULE__, :update, 1000 * 30)
+    Process.send_after(__MODULE__, :update, 1000 * 10)
     {:ok, state}
   end
 
