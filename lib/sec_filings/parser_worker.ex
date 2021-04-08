@@ -133,7 +133,7 @@ defmodule SecFilings.ParserWorker do
   def process_n(n) do
     process_batch(get_unprocessed_documents(n))
 
-    Process.send_after(__MODULE__, :update, 1000 * 3)
+    Process.send_after(__MODULE__, :update, 1000 * 30)
     IO.puts("Done with batch")
   end
 
@@ -143,14 +143,14 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def init(state) do
-    Process.send_after(__MODULE__, :update, 1000 * 1)
+    Process.send_after(__MODULE__, :update, 1000 * 30)
     {:ok, state}
   end
 
   @impl true
-  def handle_info(:update, []) do
-    Task.start_link(fn -> process_n(20) end)
-    {:noreply, []}
+  def handle_info(:update, _state) do
+    {:ok, pid} = Task.start_link(fn -> process_n(100) end)
+    {:noreply, pid}
   end
 
   # @impl true
@@ -181,6 +181,8 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_cast(:kill, state) do
+    Process.exit(state, :kill)
+
     {:stop, :oom, state}
   end
 end
