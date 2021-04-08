@@ -42,7 +42,7 @@ multi =
   |> Enum.filter(fn item -> item.valid? end)
   |> Enum.uniq()
   |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-    Ecto.Multi.insert(acc, item, item, on_conflict: :nothing, timeout: 60000)
+    Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
   end)
 
 SecFilings.Repo.transaction(multi, timeout: :infinity)

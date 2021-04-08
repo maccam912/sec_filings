@@ -70,27 +70,27 @@ defmodule SecFilings.ParserWorker do
       process_document_context_changesets(document_string, index_id)
       |> Enum.filter(fn changeset -> changeset.valid? end)
       |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing, timeout: 60000)
+        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
       end)
 
-    {:ok, _} = SecFilings.Repo.transaction(context_multi)
+    {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
 
     # Contexts need to exist in db before we do tags
     tag_multi =
       process_document_tag_changesets(document_string, index_id)
       |> Enum.filter(fn changeset -> changeset.valid? end)
       |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing, timeout: 60000)
+        Ecto.Multi.insert(acc, item, item, on_conflict: :nothing)
       end)
 
-    {:ok, _} = SecFilings.Repo.transaction(tag_multi)
+    {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
 
     SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
       dt_processed: Date.utc_today(),
       status: true,
       index_id: index_id
     })
-    |> Repo.insert(timeout: 60000)
+    |> Repo.insert()
   end
 
   def process_document(document_string, cik, adsh) do
@@ -108,7 +108,7 @@ defmodule SecFilings.ParserWorker do
           status: false,
           index_id: index_id
         })
-        |> Repo.insert(timeout: 60000)
+        |> Repo.insert()
     end
   end
 
