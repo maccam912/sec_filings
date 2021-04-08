@@ -152,8 +152,9 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, _state) do
-    {:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
-    {:noreply, pid}
+    #{:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
+    process_n(100)
+    {:noreply, _state}
   end
 
   def kill() do
