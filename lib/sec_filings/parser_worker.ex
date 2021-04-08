@@ -131,8 +131,6 @@ defmodule SecFilings.ParserWorker do
 
   def process_n(n) do
     process_batch(get_unprocessed_documents(n))
-
-    Process.send_after(__MODULE__, :update, 1000 * 5)
     IO.puts("Done with batch")
   end
 
