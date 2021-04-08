@@ -24,16 +24,20 @@ defmodule SecFilings.DocumentParser do
   def parse_tag_string(tag_string) do
     case :erlsom.simple_form(tag_string) do
       {:ok, node, _tail} ->
-        {tag, attr_list, [content]} = node
+        case node do
+          {tag, attr_list, [content]} ->
+            value =
+              case Float.parse(to_string(content)) do
+                {value, ""} -> value
+                _ -> content
+              end
 
-        value =
-          case Float.parse(to_string(content)) do
-            {value, ""} -> value
-            _ -> content
-          end
+            attr_map = attr_list |> Enum.into(%{})
+            %{to_string(tag) => %{value: value, context: to_string(attr_map['contextRef'])}}
 
-        attr_map = attr_list |> Enum.into(%{})
-        %{to_string(tag) => %{value: value, context: to_string(attr_map['contextRef'])}}
+          _ ->
+            %{}
+        end
     end
   end
 
