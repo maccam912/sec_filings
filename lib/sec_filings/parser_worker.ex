@@ -11,7 +11,7 @@ defmodule SecFilings.ParserWorker do
     SecFilings.Repo.all(
       from i in SecFilings.Raw.Index,
         select: i.id,
-        join: p in SecFilings.ParsedDocument,
+        left_join: p in SecFilings.ParsedDocument,
         on: i.id == p.index_id,
         where: is_nil(p.index_id),
         limit: ^n
