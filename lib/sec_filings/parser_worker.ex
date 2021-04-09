@@ -201,11 +201,11 @@ defmodule SecFilings.ParserWorker do
       _ ->
         IO.puts "Failed to process #{item.filename} in 60 seconds"
         index_id =
-          Repo.one(
+          IO.inspect Repo.one(
             from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
           )
 
-        SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
+        IO.inspect SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
           dt_processed: Date.utc_today(),
           status: false,
           index_id: index_id
