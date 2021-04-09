@@ -181,6 +181,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def init(state) do
+    Task.Supervisor.start_link(name: :task_supervisor)
     Process.send_after(__MODULE__, :update, 1000 * 10)
     {:ok, state}
   end
@@ -189,7 +190,7 @@ defmodule SecFilings.ParserWorker do
   def handle_info({:doc, item}, state) do
     IO.puts "Starting #{item.filename}"
     t =
-      Task.async(fn ->
+      Task.Supervisor.async_nolink(:task_supervisor, fn ->
         [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
         doc = SecFilings.DocumentGetter.get_doc(cik, adsh)
         if not is_nil(doc) do
@@ -197,7 +198,7 @@ defmodule SecFilings.ParserWorker do
         end
       end)
 
-    case Task.shutdown(t, 120000) do
+    case Task.yield(t, 120000) do
       {:ok, _} ->
         nil
 
