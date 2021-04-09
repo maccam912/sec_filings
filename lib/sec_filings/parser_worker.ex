@@ -187,9 +187,31 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info({:doc, item}, state) do
-    [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
-    doc = SecFilings.DocumentGetter.get_doc(cik, adsh)
-    process_document(doc, cik, adsh)
+    t =
+      Task.async(fn ->
+        [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
+        doc = SecFilings.DocumentGetter.get_doc(cik, adsh)
+        process_document(doc, cik, adsh)
+      end)
+
+    case Task.yield(t, 60000) do
+      {:ok, _} ->
+        nil
+
+      _ ->
+        index_id =
+          Repo.one(
+            from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
+          )
+
+        SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
+          dt_processed: Date.utc_today(),
+          status: false,
+          index_id: index_id
+        })
+        |> Repo.insert()
+    end
+
     {:noreply, state}
   end
 
