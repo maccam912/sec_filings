@@ -194,13 +194,13 @@ defmodule SecFilings.ParserWorker do
         process_document(doc, cik, adsh)
       end)
 
-    case Task.yield(t, 60000) do
+    case Task.yield(t, 120000) do
       {:ok, _} ->
         nil
 
       _ ->
+        IO.puts "Failed to process #{item.filename} in 60 seconds"
         index_id =
-          IO.puts "Failed to process #{item.filename} in 60 seconds"
           Repo.one(
             from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
           )
