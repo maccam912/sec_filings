@@ -200,6 +200,7 @@ defmodule SecFilings.ParserWorker do
 
       _ ->
         index_id =
+          IO.puts "Failed to process #{item.filename} in 60 seconds"
           Repo.one(
             from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
           )
