@@ -45,6 +45,7 @@ defmodule SecFilings.ParserWorker do
       end
     end)
     |> Stream.filter(fn item -> !is_nil(item) end)
+    |> Stream.filter(fn item -> length(Map.keys(item)) > 0 end)
     |> Stream.map(fn item ->
       [tag] = Map.keys(item)
       context = item[tag][:context]
@@ -72,19 +73,22 @@ defmodule SecFilings.ParserWorker do
         |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
         |> Flow.filter(fn changeset -> changeset.valid? end)
         |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-          Ecto.Multi.insert(acc, item, item, on_conflict: :nothing, conflict_target: [:tag, :context_id])
+          Ecto.Multi.insert(acc, item, item,
+            on_conflict: :nothing,
+            conflict_target: [:tag, :context_id]
+          )
         end)
       end)
 
     context_success =
       case Task.yield(context_multi_task, 5000) do
         {:ok, context_multi} ->
-          IO.puts "Context insert transaction finished successfully!"
+          IO.puts("Context insert transaction finished successfully!")
           {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
           true
 
         _ ->
-          IO.puts "Context insert transaction failed or took too long :("
+          IO.puts("Context insert transaction failed or took too long :(")
           false
       end
 
@@ -95,28 +99,33 @@ defmodule SecFilings.ParserWorker do
         |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
         |> Flow.filter(fn changeset -> changeset.valid? end)
         |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-          Ecto.Multi.insert(acc, item, item, on_conflict: :nothing, conflict_target: [:tag, :context_id])
+          Ecto.Multi.insert(acc, item, item,
+            on_conflict: :nothing,
+            conflict_target: [:tag, :context_id]
+          )
         end)
       end)
 
     tag_success =
       case Task.yield(tag_multi_task, 5000) do
         {:ok, tag_multi} ->
-          IO.puts "Tags insert transaction finished successfully!"
+          IO.puts("Tags insert transaction finished successfully!")
           {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
           true
 
         _ ->
-          IO.puts "Tags insert transaction failed or took too long :("
+          IO.puts("Tags insert transaction failed or took too long :(")
           false
       end
 
-    IO.inspect SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
-      dt_processed: Date.utc_today(),
-      status: tag_success and context_success,
-      index_id: index_id
-    })
-    |> Repo.insert()
+    IO.inspect(
+      SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
+        dt_processed: Date.utc_today(),
+        status: tag_success and context_success,
+        index_id: index_id
+      })
+      |> Repo.insert()
+    )
   end
 
   def process_document(document_string, cik, adsh) do
