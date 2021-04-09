@@ -192,10 +192,12 @@ defmodule SecFilings.ParserWorker do
       Task.async(fn ->
         [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
         doc = SecFilings.DocumentGetter.get_doc(cik, adsh)
-        process_document(doc, cik, adsh)
+        if not is_nil(doc) do
+          process_document(doc, cik, adsh)
+        end
       end)
 
-    case Task.yield(t, 120000) do
+    case Task.shutdown(t, 120000) do
       {:ok, _} ->
         nil
 
