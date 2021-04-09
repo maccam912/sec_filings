@@ -22,14 +22,15 @@ defmodule SecFilings.DocumentGetter do
           [body] |> StreamGzip.gunzip() |> Enum.into("")
 
         _ ->
-          {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-            HTTPoison.get(
+          case doc_from_sec = HTTPoison.get(
               SecFilings.Util.generate_url(cik, adsh),
               %{"User-Agent" => "SecFilings/1.0"},
               hackney: [pool: :first_pool]
-            )
-
-          body
+            ) do
+          {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+            body
+          _ -> nil
+          end
       end
 
     # true = Cachex.put!(:filings_cache, adsh, body)
