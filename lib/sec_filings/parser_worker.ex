@@ -110,7 +110,7 @@ defmodule SecFilings.ParserWorker do
       case Task.yield(tag_multi_task, 5000) do
         {:ok, tag_multi} ->
           IO.puts("Tags insert transaction finished successfully!")
-          {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
+          {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 120000)
           true
 
         _ ->
