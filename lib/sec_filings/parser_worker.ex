@@ -187,6 +187,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info({:doc, item}, state) do
+    IO.puts "Starting #{item.filename}"
     t =
       Task.async(fn ->
         [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
@@ -199,7 +200,6 @@ defmodule SecFilings.ParserWorker do
         nil
 
       _ ->
-        IO.puts "Failed to process #{item.filename} in 60 seconds"
         index_id =
           IO.inspect Repo.one(
             from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
