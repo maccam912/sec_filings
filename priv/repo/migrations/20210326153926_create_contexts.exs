@@ -11,6 +11,7 @@ defmodule SecFilings.Repo.Migrations.CreateContexts do
       timestamps()
     end
 
+    create index(:contexts, [:index_id])
     create unique_index(:contexts, [:context_id, :index_id])
   end
 end

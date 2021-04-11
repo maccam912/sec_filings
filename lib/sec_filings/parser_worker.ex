@@ -110,7 +110,7 @@ defmodule SecFilings.ParserWorker do
       case Task.yield(tag_multi_task, 5000) do
         {:ok, tag_multi} ->
           IO.puts("Tags insert transaction finished successfully!")
-          {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 120000)
+          {:ok, _} = IO.inspect(SecFilings.Repo.transaction(tag_multi, timeout: 120_000))
           true
 
         _ ->
@@ -188,32 +188,40 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info({:doc, item}, state) do
-    IO.puts "Starting #{item.filename}"
+    IO.puts("Starting #{item.filename}")
+
     t =
       Task.Supervisor.async_nolink(:task_supervisor, fn ->
         [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
         doc = SecFilings.DocumentGetter.get_doc(cik, adsh)
+
         if not is_nil(doc) do
           process_document(doc, cik, adsh)
         end
       end)
 
-    case Task.yield(t, 120000) do
+    case Task.yield(t, 120_000) do
       {:ok, _} ->
         nil
 
-      _ ->
+      x ->
+        IO.inspect(x)
+
         index_id =
-          IO.inspect Repo.one(
-            from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
+          IO.inspect(
+            Repo.one(
+              from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
+            )
           )
 
-        IO.inspect SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
-          dt_processed: Date.utc_today(),
-          status: false,
-          index_id: index_id
-        })
-        |> Repo.insert()
+        IO.inspect(
+          SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
+            dt_processed: Date.utc_today(),
+            status: false,
+            index_id: index_id
+          })
+          |> Repo.insert()
+        )
     end
 
     {:noreply, state}
@@ -224,6 +232,7 @@ defmodule SecFilings.ParserWorker do
     # {:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
     get_unprocessed_documents(100)
     |> Enum.map(fn item ->
+      IO.inspect(item)
       send(self(), {:doc, item})
     end)
 
