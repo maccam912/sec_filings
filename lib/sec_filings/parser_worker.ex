@@ -3,6 +3,8 @@ defmodule SecFilings.ParserWorker do
   use GenServer
   alias SecFilings.Repo
 
+  Process.flag(:max_heap_size, 200_000_000)
+
   def get_unprocessed_documents() do
     get_unprocessed_documents(1_000_000)
   end
@@ -229,8 +231,7 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, state) do
-    # {:ok, pid} = Task.start_link(fn -> task_process_n(100, self()) end)
-    get_unprocessed_documents(100)
+    get_unprocessed_documents(1)
     |> Enum.map(fn item ->
       IO.inspect(item)
       send(self(), {:doc, item})
@@ -238,16 +239,5 @@ defmodule SecFilings.ParserWorker do
 
     send(self(), :update)
     {:noreply, state}
-  end
-
-  def kill() do
-    GenServer.cast(__MODULE__, :kill)
-  end
-
-  @impl true
-  def handle_cast(:kill, state) do
-    Process.exit(state, :kill)
-
-    {:stop, :oom, state}
   end
 end
