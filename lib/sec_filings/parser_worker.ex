@@ -12,10 +12,7 @@ defmodule SecFilings.ParserWorker do
   def get_unprocessed_documents(n) do
     SecFilings.Repo.all(
       from i in SecFilings.Raw.Index,
-        select: i,
-        left_join: p in SecFilings.ParsedDocument,
-        on: i.id == p.index_id,
-        where: is_nil(p.index_id),
+        where: i.status == -1,
         limit: ^n
     )
   end
