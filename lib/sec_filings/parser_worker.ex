@@ -77,10 +77,7 @@ defmodule SecFilings.ParserWorker do
           |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
           |> Flow.filter(fn item -> item.valid? end)
           |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-            Ecto.Multi.insert(acc, item, item,
-              on_conflict: :nothing,
-              conflict_target: [:context_id, :index_id]
-            )
+            Ecto.Multi.insert(acc, UUID.uuid4(), item, on_conflict: :nothing)
           end)
 
         if length(valid_changesets.operations) == 0 do
@@ -101,10 +98,7 @@ defmodule SecFilings.ParserWorker do
           |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
           |> Flow.filter(fn item -> item.valid? end)
           |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-            Ecto.Multi.insert(acc, item, item,
-              on_conflict: {:replace, []},
-              conflict_target: [:tag, :value, :context_id]
-            )
+            Ecto.Multi.insert(acc, UUID.uuid4(), item, on_conflict: :nothing)
           end)
 
         if length(valid_changesets.operations) == 0 do

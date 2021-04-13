@@ -20,7 +20,7 @@ defmodule SecFilings.MixProject do
   def application do
     [
       mod: {SecFilings.Application, []},
-      extra_applications: [:logger, :runtime_tools, :iex]
+      extra_applications: [:logger, :runtime_tools, :crypto, :iex]
     ]
   end
 
@@ -54,7 +54,7 @@ defmodule SecFilings.MixProject do
       {:flow, "~> 1.1.0"},
       {:erlsom, "~> 1.5"},
       {:stream_gzip, "~> 0.4.1"},
-      {:tqdm, "~> 0.0.2"}
+      {:uuid, "~> 1.1"}
     ]
   end
 

@@ -31,6 +31,7 @@ defmodule SecFilings.DocumentGetter do
               body
 
             _ ->
+              throw(:http_error)
               nil
           end
       end
