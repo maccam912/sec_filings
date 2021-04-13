@@ -65,108 +65,61 @@ defmodule SecFilings.ParserWorker do
     end)
   end
 
-  def _process_document(document_string, index) do
+  def process_document(document_string, cik, adsh) do
+    filename = SecFilings.Util.generate_filename(cik, adsh)
+    index = Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^filename)
+
     context_multi_task =
       Task.async(fn ->
-        process_document_context_changesets(document_string, index.id)
-        |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
-        |> Flow.filter(fn changeset -> changeset.valid? end)
-        |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-          Ecto.Multi.insert(acc, item, item,
-            on_conflict: :nothing,
-            conflict_target: [:tag, :context_id]
-          )
-        end)
+        valid_changesets =
+          process_document_context_changesets(document_string, index.id)
+          |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
+          |> Flow.filter(fn changeset -> changeset.valid? end)
+          |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
+            Ecto.Multi.insert(acc, item, item,
+              on_conflict: :nothing,
+              conflict_target: [:context_id, :index_id]
+            )
+          end)
+
+        if length(valid_changesets.operations) == 0 do
+          throw(:empty_context_changeset)
+        end
+
+        valid_changesets
       end)
 
-    context_success =
-      case Task.yield(context_multi_task, 5000) do
-        {:ok, context_multi} ->
-          IO.puts("Context insert transaction finished successfully!")
-          {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
-          true
-
-        _ ->
-          IO.puts("Context insert transaction failed or took too long :(")
-          false
-      end
+    {:ok, context_multi} = Task.yield(context_multi_task, 5000)
+    {:ok, _} = SecFilings.Repo.transaction(context_multi, timeout: 60000)
 
     # Contexts need to exist in db before we do tags
     tag_multi_task =
       Task.async(fn ->
-        process_document_tag_changesets(document_string, index.id)
-        |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
-        |> Flow.filter(fn changeset -> changeset.valid? end)
-        |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
-          Ecto.Multi.insert(acc, item, item,
-            on_conflict: :nothing,
-            conflict_target: [:tag, :context_id]
-          )
-        end)
+        valid_changesets =
+          process_document_tag_changesets(document_string, index.id)
+          |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
+          |> Flow.filter(fn changeset -> changeset.valid? end)
+          |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
+            Ecto.Multi.insert(acc, item, item,
+              on_conflict: :nothing,
+              conflict_target: [:tag, :value, :context_id]
+            )
+          end)
+
+        if length(valid_changesets.operations) == 0 do
+          throw(:empty_tag_chaneset)
+        end
+
+        valid_changesets
       end)
 
-    tag_success =
-      case Task.yield(tag_multi_task, 5000) do
-        {:ok, tag_multi} ->
-          IO.puts("Tags insert transaction finished successfully!")
-          {:ok, _} = IO.inspect(SecFilings.Repo.transaction(tag_multi, timeout: 120_000))
-          true
+    {:ok, tag_multi} = Task.yield(tag_multi_task, 5000)
+    {:ok, _} = SecFilings.Repo.transaction(tag_multi, timeout: 60000)
 
-        _ ->
-          IO.puts("Tags insert transaction failed or took too long :(")
-          false
-      end
-
-    IO.inspect(
-      SecFilings.Raw.Index.changeset(index, %{
-        status: 1
-      })
-      |> Repo.update()
-    )
-  end
-
-  def process_document(document_string, cik, adsh) do
-    filename = SecFilings.Util.generate_filename(cik, adsh)
-
-    index = Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^filename)
-
-    try do
-      _process_document(document_string, index)
-    rescue
-      _ ->
-        SecFilings.Raw.Index.changeset(index, %{
-          status: 2
-        })
-        |> Repo.update()
-    end
-  end
-
-  def process_batch(docs) do
-    docs
-    |> Flow.from_enumerable(stages: 16, min_demand: 16, max_demand: 32)
-    |> Flow.map(fn index ->
-      [_, _, cik, adsh, _] = String.split(index.filename, ["/", "."])
-      {SecFilings.DocumentGetter.get_doc(cik, adsh), cik, adsh}
-    end)
-    |> Flow.map(fn {doc, cik, adsh} ->
-      process_document(doc, cik, adsh)
-    end)
-    |> Flow.run()
-  end
-
-  def process_all() do
-    process_batch(get_unprocessed_documents())
-  end
-
-  def process_n(n) do
-    process_batch(get_unprocessed_documents(n))
-    IO.puts("Done with batch")
-  end
-
-  def task_process_n(n, pid) do
-    process_n(n)
-    IO.puts("Sending update message")
-    send(pid, :update)
+    SecFilings.Raw.Index.changeset(index, %{
+      status: 1
+    })
+    |> Repo.update()
   end
 
   def start_link(_opts) do
@@ -176,7 +129,7 @@ defmodule SecFilings.ParserWorker do
   @impl true
   def init(state) do
     Task.Supervisor.start_link(name: :task_supervisor)
-    Process.send_after(__MODULE__, :update, 1000 * 10)
+    Process.send_after(__MODULE__, :update, 10)
     {:ok, state}
   end
 
@@ -203,26 +156,16 @@ defmodule SecFilings.ParserWorker do
 
     case Task.yield(t, 120_000) do
       {:ok, _} ->
-        nil
+        SecFilings.Raw.Index.changeset(index, %{
+          status: 1
+        })
+        |> Repo.update()
 
-      x ->
-        IO.inspect(x)
-
-        index_id =
-          IO.inspect(
-            Repo.one(
-              from i in SecFilings.Raw.Index, where: i.filename == ^item.filename, select: i.id
-            )
-          )
-
-        IO.inspect(
-          SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
-            dt_processed: Date.utc_today(),
-            status: false,
-            index_id: index_id
-          })
-          |> Repo.insert()
-        )
+      _ ->
+        SecFilings.Raw.Index.changeset(index, %{
+          status: 2
+        })
+        |> Repo.update()
     end
 
     {:noreply, state}
@@ -240,7 +183,6 @@ defmodule SecFilings.ParserWorker do
 
     get_unprocessed_documents(10)
     |> Enum.map(fn item ->
-      IO.inspect(item)
       send(self(), {:doc, item})
     end)
 

@@ -11,6 +11,6 @@ defmodule SecFilings.Repo.Migrations.CreateTags do
     end
 
     create index(:tags, :context_id)
-    create unique_index(:tags, [:tag, :context_id])
+    create unique_index(:tags, [:tag, :value, :context_id])
   end
 end
