@@ -37,7 +37,14 @@ multi =
   |> Flow.from_enumerable()
   |> Flow.filter(fn item -> not is_nil(item) end)
   |> Flow.map(fn item ->
-    SecFilings.Raw.Index.changeset(%SecFilings.Raw.Index{}, Map.put(item, :status, -1))
+    status =
+      if Enum.member?(["10-K", "10-Q", "10-K/A", "10-Q/A"], Map.get(item, :form_type)) do
+        -1
+      else
+        -3
+      end
+
+    SecFilings.Raw.Index.changeset(%SecFilings.Raw.Index{}, Map.put(item, :status, status))
   end)
   |> Enum.filter(fn item -> item.valid? end)
   |> Enum.uniq()

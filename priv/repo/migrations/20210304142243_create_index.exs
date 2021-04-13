@@ -10,7 +10,7 @@ defmodule SecFilings.Repo.Migrations.CreateIndex do
       add :filename, :string, null: false
       add :status, :int2, default: -1, null: false
 
-      # -1 for unprocessed, -2 for started, but not stopped, 0 for started, 1 for success, 2 for no contexts, 3 for no tags, -99 for other
+      # -1 for unprocessed, -3 for won't process (not 10k or 10q), -2 for started, but not stopped, 0 for started, 1 for success, 2 for no contexts, 3 for no tags, -99 for other
 
       timestamps()
     end

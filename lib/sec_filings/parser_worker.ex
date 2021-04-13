@@ -13,6 +13,7 @@ defmodule SecFilings.ParserWorker do
     SecFilings.Repo.all(
       from i in SecFilings.Raw.Index,
         where: i.status == -1,
+        order_by: [desc: :date_filed],
         limit: ^n
     )
   end
@@ -74,7 +75,7 @@ defmodule SecFilings.ParserWorker do
         valid_changesets =
           process_document_context_changesets(document_string, index.id)
           |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
-          |> Flow.filter(fn changeset -> changeset.valid? end)
+          |> Flow.filter(fn item -> item.valid? end)
           |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
             Ecto.Multi.insert(acc, item, item,
               on_conflict: :nothing,
@@ -98,7 +99,7 @@ defmodule SecFilings.ParserWorker do
         valid_changesets =
           process_document_tag_changesets(document_string, index.id)
           |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
-          |> Flow.filter(fn changeset -> changeset.valid? end)
+          |> Flow.filter(fn item -> item.valid? end)
           |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
             Ecto.Multi.insert(acc, item, item,
               on_conflict: :nothing,
@@ -107,7 +108,7 @@ defmodule SecFilings.ParserWorker do
           end)
 
         if length(valid_changesets.operations) == 0 do
-          throw(:empty_tag_chaneset)
+          throw(:empty_tag_changeset)
         end
 
         valid_changesets
@@ -169,7 +170,7 @@ defmodule SecFilings.ParserWorker do
 
       {:exit, {{:nocatch, :empty_tag_changeset}, _}} ->
         SecFilings.Raw.Index.changeset(index, %{
-          status: 2
+          status: 3
         })
         |> Repo.update()
 
