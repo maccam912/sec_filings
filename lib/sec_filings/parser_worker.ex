@@ -161,9 +161,21 @@ defmodule SecFilings.ParserWorker do
         })
         |> Repo.update()
 
-      _ ->
+      {:exit, {{:nocatch, :empty_context_changeset}, _}} ->
         SecFilings.Raw.Index.changeset(index, %{
           status: 2
+        })
+        |> Repo.update()
+
+      {:exit, {{:nocatch, :empty_tag_changeset}, _}} ->
+        SecFilings.Raw.Index.changeset(index, %{
+          status: 2
+        })
+        |> Repo.update()
+
+      _ ->
+        SecFilings.Raw.Index.changeset(index, %{
+          status: -99
         })
         |> Repo.update()
     end
@@ -177,7 +189,7 @@ defmodule SecFilings.ParserWorker do
     # Set them to 2, since they obviously never finished running
     Repo.all(from i in SecFilings.Raw.Index, where: i.status == 0)
     |> Enum.map(fn item ->
-      SecFilings.Raw.Index.changeset(item, %{status: 2})
+      SecFilings.Raw.Index.changeset(item, %{status: -2})
       |> Repo.update()
     end)
 
