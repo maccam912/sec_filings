@@ -128,8 +128,7 @@ defmodule SecFilings.ParserWorker do
     {:ok, state}
   end
 
-  @impl true
-  def handle_info({:doc, item}, state) do
+  def process_item(item) do
     IO.puts("Starting #{item.filename}")
 
     index = Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^item.filename)
@@ -174,6 +173,14 @@ defmodule SecFilings.ParserWorker do
         })
         |> Repo.update()
     end
+  end
+
+  @impl true
+  def handle_info({:docs, items}, state) do
+    items
+    |> Flow.from_enumerable(stages: 16, min_demand: 16, max_demand: 32)
+    |> Flow.map(fn item -> process_item(item) end)
+    |> Flow.run()
 
     {:noreply, state}
   end
@@ -188,10 +195,7 @@ defmodule SecFilings.ParserWorker do
       |> Repo.update()
     end)
 
-    get_unprocessed_documents(10)
-    |> Enum.map(fn item ->
-      send(self(), {:doc, item})
-    end)
+    send(self(), {:docs, get_unprocessed_documents(64)})
 
     send(self(), :update)
     {:noreply, state}
