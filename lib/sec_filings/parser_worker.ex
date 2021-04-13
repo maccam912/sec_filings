@@ -68,10 +68,10 @@ defmodule SecFilings.ParserWorker do
     end)
   end
 
-  def _process_document(document_string, index_id) do
+  def _process_document(document_string, index) do
     context_multi_task =
       Task.async(fn ->
-        process_document_context_changesets(document_string, index_id)
+        process_document_context_changesets(document_string, index.id)
         |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
         |> Flow.filter(fn changeset -> changeset.valid? end)
         |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
@@ -97,7 +97,7 @@ defmodule SecFilings.ParserWorker do
     # Contexts need to exist in db before we do tags
     tag_multi_task =
       Task.async(fn ->
-        process_document_tag_changesets(document_string, index_id)
+        process_document_tag_changesets(document_string, index.id)
         |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
         |> Flow.filter(fn changeset -> changeset.valid? end)
         |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
@@ -121,31 +121,26 @@ defmodule SecFilings.ParserWorker do
       end
 
     IO.inspect(
-      SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
-        dt_processed: Date.utc_today(),
-        status: tag_success and context_success,
-        index_id: index_id
+      SecFilings.Raw.Index.changeset(index, %{
+        status: 1
       })
-      |> Repo.insert()
+      |> Repo.update()
     )
   end
 
   def process_document(document_string, cik, adsh) do
     filename = SecFilings.Util.generate_filename(cik, adsh)
 
-    index_id =
-      Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^filename, select: i.id)
+    index = Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^filename)
 
     try do
-      _process_document(document_string, index_id)
+      _process_document(document_string, index)
     rescue
       _ ->
-        SecFilings.ParsedDocument.changeset(%SecFilings.ParsedDocument{}, %{
-          dt_processed: Date.utc_today(),
-          status: false,
-          index_id: index_id
+        SecFilings.Raw.Index.changeset(index, %{
+          status: 2
         })
-        |> Repo.insert()
+        |> Repo.update()
     end
   end
 
@@ -192,6 +187,13 @@ defmodule SecFilings.ParserWorker do
   def handle_info({:doc, item}, state) do
     IO.puts("Starting #{item.filename}")
 
+    index = Repo.one(from i in SecFilings.Raw.Index, where: i.filename == ^item.filename)
+
+    SecFilings.Raw.Index.changeset(index, %{
+      status: 0
+    })
+    |> Repo.update()
+
     t =
       Task.Supervisor.async_nolink(:task_supervisor, fn ->
         [_, _, cik, adsh, _] = String.split(item.filename, ["/", "."])
@@ -231,6 +233,14 @@ defmodule SecFilings.ParserWorker do
 
   @impl true
   def handle_info(:update, state) do
+    # Before we start, check for any that are still status 0 (running)
+    # Set them to 2, since they obviously never finished running
+    Repo.all(from i in SecFilings.Raw.Index, where: i.status == 0)
+    |> Enum.map(fn item ->
+      SecFilings.Raw.Index.changeset(item, %{status: 2})
+      |> Repo.update()
+    end)
+
     get_unprocessed_documents(10)
     |> Enum.map(fn item ->
       IO.inspect(item)

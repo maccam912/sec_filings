@@ -2,15 +2,11 @@ use Mix.Config
 
 # Configure your database
 config :sec_filings, SecFilings.Repo,
-  # username: "root",
-  username: "secfilings",
-  password: "i4gdNSndVNP4QvWyPcKiT",
+  username: "postgres",
+  password: "postgres",
   # password: System.get_env("DB_PASS"),
-  database: "sec_filings",
-  # database: "sec-filings-db-dev",
-  # database: "sec-filings-db",
-  # hostname: "sec-filings-db.database.windows.net",
-  hostname: "95.217.6.144",
+  database: "sec_filings_dev",
+  hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
