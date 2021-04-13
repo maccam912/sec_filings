@@ -22,6 +22,8 @@ defmodule SecFilings.DocumentGetter do
           [body] |> StreamGzip.gunzip() |> Enum.into("")
 
         _ ->
+          IO.puts("Not in wasabi, get from SEC")
+
           case HTTPoison.get(
                  SecFilings.Util.generate_url(cik, adsh),
                  %{"User-Agent" => "SecFilings/1.0"},
