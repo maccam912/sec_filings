@@ -102,7 +102,7 @@ defmodule SecFilings.ParserWorker do
           |> Flow.filter(fn item -> item.valid? end)
           |> Enum.reduce(%Ecto.Multi{}, fn item, acc ->
             Ecto.Multi.insert(acc, item, item,
-              on_conflict: :nothing,
+              on_conflict: {:replace, []},
               conflict_target: [:tag, :value, :context_id]
             )
           end)
