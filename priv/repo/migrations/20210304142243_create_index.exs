@@ -15,5 +15,6 @@ defmodule SecFilings.Repo.Migrations.CreateIndex do
     end
 
     create unique_index(:index, :filename)
+    create index(:index, :status)
   end
 end
