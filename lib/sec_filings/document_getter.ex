@@ -16,7 +16,7 @@ defmodule SecFilings.DocumentGetter do
       case HTTPoison.get(
              wasabi_url,
              %{"User-Agent" => "SecFilings/1.0"},
-             hackney: [pool: :first_pool]
+             hackney: [pool: :default]
            ) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
           [body] |> StreamGzip.gunzip() |> Enum.into("")
@@ -27,7 +27,7 @@ defmodule SecFilings.DocumentGetter do
           case HTTPoison.get(
                  SecFilings.Util.generate_url(cik, adsh),
                  %{"User-Agent" => "SecFilings/1.0"},
-                 hackney: [pool: :first_pool]
+                 hackney: [pool: :default]
                ) do
             {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
               body

@@ -52,10 +52,8 @@ defmodule SecFilingsWeb.CikLive do
     filings =
       SecFilings.Repo.all(
         from c in SecFilings.Raw.Index,
-          left_join: parsed_documents in assoc(c, :parsed_documents),
           where:
-            c.form_type in ["10-K", "10-Q"] and c.cik == ^Map.get(params, "cik") and
-              not is_nil(parsed_documents),
+            c.form_type in ["10-K", "10-Q"] and c.cik == ^Map.get(params, "cik") and c.status == 1,
           order_by: [desc: :date_filed, asc: :form_type]
       )
 

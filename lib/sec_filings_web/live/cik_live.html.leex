@@ -2,7 +2,6 @@
 
 <div id="chart" phx-update="ignore" phx-hook="chart" style="width:100%; height: 600px;"></div>
 
-<button phx-click="get_tags">Get Tags</button>
 <table>
 <tr><th>Form Type</th><th>Date Filed</th><th>Filename</th></tr>
 <%= for table <- @tables do %>

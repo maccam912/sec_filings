@@ -5,9 +5,18 @@ defmodule SecFilingsWeb.LoadLatestLive do
   @impl true
   def mount(_params, _session, socket) do
     send(self(), :update)
-    done = SecFilings.Repo.one(from i in SecFilings.ParsedDocument, select: count(i.id))
-    total = SecFilings.Repo.one(from i in SecFilings.Raw.Index, select: count(i.id))
-    {:ok, assign(socket, done: done, total: total)}
+
+    done =
+      SecFilings.Repo.one(
+        from i in SecFilings.Raw.Index, where: i.status == 1, select: count(i.id)
+      )
+
+    total =
+      SecFilings.Repo.one(
+        from i in SecFilings.Raw.Index, where: i.status == -1, select: count(i.id)
+      )
+
+    {:ok, assign(socket, done: done, total: done + total)}
   end
 
   @impl true

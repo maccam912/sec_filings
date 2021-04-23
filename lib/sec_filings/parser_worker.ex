@@ -178,7 +178,7 @@ defmodule SecFilings.ParserWorker do
   @impl true
   def handle_info({:docs, items}, state) do
     items
-    |> Flow.from_enumerable(stages: 16, min_demand: 16, max_demand: 32)
+    |> Flow.from_enumerable(stages: 4, min_demand: 4, max_demand: 8)
     |> Flow.map(fn item -> process_item(item) end)
     |> Flow.run()
 
@@ -195,7 +195,7 @@ defmodule SecFilings.ParserWorker do
       |> Repo.update()
     end)
 
-    send(self(), {:docs, get_unprocessed_documents(64)})
+    send(self(), {:docs, get_unprocessed_documents(8)})
 
     send(self(), :update)
     {:noreply, state}
